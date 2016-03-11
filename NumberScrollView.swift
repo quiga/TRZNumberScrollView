@@ -81,12 +81,20 @@ public class NumberScrollView: TRZView {
         }
     }
 
+    public init(numberScrollLayer:NumberScrollLayer) {
+        self.numberScrollLayer = numberScrollLayer
+        super.init(frame: CGRectZero)
+        commonInit()
+    }
+
     override public init(frame: CGRect) {
+        self.numberScrollLayer = NumberScrollLayer()
         super.init(frame: frame)
         commonInit()
     }
 
     required public init?(coder aDecoder: NSCoder) {
+        self.numberScrollLayer = NumberScrollLayer()
         super.init(coder: aDecoder)
         commonInit()
     }
@@ -103,7 +111,7 @@ public class NumberScrollView: TRZView {
         layer.addSublayer(numberScrollLayer)
     }
 
-    private var numberScrollLayer:NumberScrollLayer = NumberScrollLayer()
+    private var numberScrollLayer:NumberScrollLayer
 
     public override func layoutSublayersOfLayer(layer: CALayer) {
         let innerSize = numberScrollLayer.boundingSize
