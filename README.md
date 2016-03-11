@@ -33,6 +33,6 @@ If you intend to set both `font` and `textColor` at the same time, it is recomme
 
 Notes
 ---
-By default, generated images are cached in a global, thread-safe cache. However, you can override this behavior on the `CALayer` level by calling `init(imageCache:)` with a `nil` argument to disable caching altogether, instantiating an instance of `NumberScrollLayer.DefaultImageCache` and passing that in as the argument to `init(imageCache:)`, or implementing your own cache that conforms to the `NumberScrollLayerImageCache` protocol.
+By default, generated images are cached in a global, thread-safe cache. However, you can override this behavior on the `NumberScrollLayer` level by calling `init(imageCache:)` with a `nil` argument to disable caching altogether, instantiating an instance of `NumberScrollLayer.DefaultImageCache` and passing that in as the argument to `init(imageCache:)`, or implementing your own cache that conforms to the `NumberScrollLayerImageCache` protocol.
 
 The default cache on iOS automatically evicts its unused contents when the app is backgrounded or when the app receives a memory warning. The default cache on OS X does not automatically evict its unused contents, but you can do so manually by calling `NumberScrollLayer.evictGlobalImageCache()`.
