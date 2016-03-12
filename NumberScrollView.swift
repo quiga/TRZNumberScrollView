@@ -24,9 +24,7 @@ public class NumberScrollView: TRZView {
     }
     
     public var text:String {
-        get {
-            return numberScrollLayer.text
-        }
+        get { return numberScrollLayer.text }
         set {
             let oldSize = numberScrollLayer.boundingSize
             numberScrollLayer.text = newValue
@@ -52,18 +50,12 @@ public class NumberScrollView: TRZView {
     }
 
     public var textColor:TRZColor {
-        get {
-            return numberScrollLayer.textColor
-        }
-        set {
-            numberScrollLayer.textColor = newValue
-        }
+        get { return numberScrollLayer.textColor }
+        set { numberScrollLayer.textColor = newValue }
     }
 
     public var font:TRZFont {
-        get {
-            return numberScrollLayer.font
-        }
+        get { return numberScrollLayer.font }
         set {
             let oldSize = numberScrollLayer.boundingSize
             numberScrollLayer.font = newValue
@@ -74,21 +66,13 @@ public class NumberScrollView: TRZView {
     }
 
     public var animationDuration:NSTimeInterval {
-        get {
-            return numberScrollLayer.animationDuration
-        }
-        set {
-            numberScrollLayer.animationDuration = newValue
-        }
+        get { return numberScrollLayer.animationDuration }
+        set { numberScrollLayer.animationDuration = newValue }
     }
 
     public var animationCurve:CAMediaTimingFunction {
-        get {
-            return numberScrollLayer.animationCurve
-        }
-        set {
-            numberScrollLayer.animationCurve = newValue
-        }
+        get { return numberScrollLayer.animationCurve }
+        set { numberScrollLayer.animationCurve = newValue }
     }
     
     public var imageCachePolicy:ImageCachePolicy = .Global {
@@ -345,6 +329,7 @@ public class NumberScrollLayer: CALayer {
 
     private var _textColor:TRZColor = TRZColor.blackColor()
     public var textColor:TRZColor {
+        get { return _textColor }
         set {
             if _textColor != newValue {
                 releaseCachedImages()
@@ -357,9 +342,6 @@ public class NumberScrollLayer: CALayer {
                 }
             }
         }
-        get {
-            return _textColor
-        }
     }
 
     func releaseCachedImages() {
@@ -369,6 +351,7 @@ public class NumberScrollLayer: CALayer {
 
     private var _font:TRZFont = TRZFont.systemFontOfSize(12).monospacedDigitsFont
     public var font:TRZFont {
+        get { return _font }
         set {
             let newFont = newValue.monospacedDigitsFont
             if _font != newFont {
@@ -384,9 +367,6 @@ public class NumberScrollLayer: CALayer {
                     CATransaction.commit()
                 }
             }
-        }
-        get {
-            return _font
         }
     }
 

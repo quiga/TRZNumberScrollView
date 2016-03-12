@@ -791,6 +791,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                                 <connections>
+                                    <action selector="curvePointBoxDidEndEditing:" target="n3r-01-PKD" id="7AC-BX-JfI"/>
                                     <binding destination="n3r-01-PKD" name="enabled" keyPath="self.animationEnabled" id="iwA-H0-wAo"/>
                                     <binding destination="n3r-01-PKD" name="value" keyPath="self.curvePoint1x" id="waB-UZ-Fns"/>
                                     <outlet property="delegate" destination="n3r-01-PKD" id="Mar-Ll-CDq"/>
@@ -808,6 +809,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                                 <connections>
+                                    <action selector="curvePointBoxDidEndEditing:" target="n3r-01-PKD" id="nKb-sO-kcH"/>
                                     <binding destination="n3r-01-PKD" name="enabled" keyPath="self.animationEnabled" id="7Z2-cf-lRu"/>
                                     <binding destination="n3r-01-PKD" name="value" keyPath="self.curvePoint2x" id="etj-YI-HkG"/>
                                     <outlet property="delegate" destination="n3r-01-PKD" id="Zko-w9-1IF"/>
@@ -825,6 +827,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                                 <connections>
+                                    <action selector="curvePointBoxDidEndEditing:" target="n3r-01-PKD" id="psK-Xa-bjo"/>
                                     <binding destination="n3r-01-PKD" name="enabled" keyPath="self.animationEnabled" id="BSa-yb-J1x"/>
                                     <binding destination="n3r-01-PKD" name="value" keyPath="self.curvePoint2y" id="uh7-aN-dbT"/>
                                     <outlet property="delegate" destination="n3r-01-PKD" id="YKo-j3-2RR"/>
@@ -955,7 +958,7 @@
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="JOe-6U-t0T" customClass="AnimationCurveEditorView" customModule="TRZNumberScrollViewDemoOSX" customModuleProvider="target">
+                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="JOe-6U-t0T" customClass="AnimationCurveEditor" customModule="TRZNumberScrollViewDemoOSX" customModuleProvider="target">
                                 <rect key="frame" x="20" y="107" width="188" height="188"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="JOe-6U-t0T" secondAttribute="height" multiplier="1:1" id="RSU-kl-r4N"/>
@@ -973,6 +976,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                                 <connections>
+                                    <action selector="curvePointBoxDidEndEditing:" target="n3r-01-PKD" id="jAv-2o-qiP"/>
                                     <binding destination="n3r-01-PKD" name="enabled" keyPath="self.animationEnabled" id="pCE-HP-utc"/>
                                     <binding destination="n3r-01-PKD" name="value" keyPath="self.curvePoint1y" id="Voc-eS-ACm"/>
                                     <outlet property="delegate" destination="n3r-01-PKD" id="Heu-2i-6Yo"/>
@@ -1049,7 +1053,7 @@
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="animationCurveEditorView" destination="JOe-6U-t0T" id="1qD-SH-y8Q"/>
+                        <outlet property="animationCurveEditor" destination="JOe-6U-t0T" id="MDu-as-SX9"/>
                         <outlet property="downDirectionButton" destination="EzO-9s-PQR" id="uct-N3-q9t"/>
                         <outlet property="upDirectionButton" destination="8lr-AO-xZy" id="kFY-jW-dhN"/>
                     </connections>

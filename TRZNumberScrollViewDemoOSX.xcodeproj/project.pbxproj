@@ -13,7 +13,7 @@
 		CAC00D231C9369F100044541 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CAC00D211C9369F100044541 /* Main.storyboard */; };
 		CAC00D2B1C936A6700044541 /* NumberScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAC00D2A1C936A6700044541 /* NumberScrollView.swift */; };
 		CAC00D2D1C93732200044541 /* NumberScrollViewParametersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAC00D2C1C93732200044541 /* NumberScrollViewParametersViewController.swift */; };
-		CAFDF2FA1C93A19300A99B84 /* AnimationCurveEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAFDF2F91C93A19300A99B84 /* AnimationCurveEditorView.swift */; };
+		CAFDF2FA1C93A19300A99B84 /* AnimationCurveEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAFDF2F91C93A19300A99B84 /* AnimationCurveEditor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,7 +25,7 @@
 		CAC00D241C9369F100044541 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CAC00D2A1C936A6700044541 /* NumberScrollView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NumberScrollView.swift; sourceTree = "<group>"; };
 		CAC00D2C1C93732200044541 /* NumberScrollViewParametersViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NumberScrollViewParametersViewController.swift; sourceTree = "<group>"; };
-		CAFDF2F91C93A19300A99B84 /* AnimationCurveEditorView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnimationCurveEditorView.swift; sourceTree = "<group>"; };
+		CAFDF2F91C93A19300A99B84 /* AnimationCurveEditor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnimationCurveEditor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,7 +63,7 @@
 				CAC00D1D1C9369F100044541 /* ViewController.swift */,
 				CAC00D1F1C9369F100044541 /* Assets.xcassets */,
 				CAC00D211C9369F100044541 /* Main.storyboard */,
-				CAFDF2F91C93A19300A99B84 /* AnimationCurveEditorView.swift */,
+				CAFDF2F91C93A19300A99B84 /* AnimationCurveEditor.swift */,
 				CAC00D2C1C93732200044541 /* NumberScrollViewParametersViewController.swift */,
 				CAC00D241C9369F100044541 /* Info.plist */,
 			);
@@ -144,7 +144,7 @@
 				CAC00D1E1C9369F100044541 /* ViewController.swift in Sources */,
 				CAC00D1C1C9369F100044541 /* AppDelegate.swift in Sources */,
 				CAC00D2D1C93732200044541 /* NumberScrollViewParametersViewController.swift in Sources */,
-				CAFDF2FA1C93A19300A99B84 /* AnimationCurveEditorView.swift in Sources */,
+				CAFDF2FA1C93A19300A99B84 /* AnimationCurveEditor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

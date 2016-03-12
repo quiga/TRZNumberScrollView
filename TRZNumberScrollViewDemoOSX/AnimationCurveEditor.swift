@@ -1,5 +1,5 @@
 //
-//  AnimationCurveEditorView.swift
+//  AnimationCurveEditor.swift
 //  TRZNumberScrollViewDemoOSX
 //
 //  Created by Thomas Zhao on 3/11/16.
@@ -8,113 +8,95 @@
 
 import Cocoa
 
-public class AnimationCurveEditorView: NSView {
+public class AnimationCurveEditor: NSControl {
     public var backgroundColor:NSColor? = NSColor.whiteColor() {
-        didSet {
-            needsDisplay = true
-        }
+        didSet { needsDisplay = true }
     }
     
     public var drawsGrid = true {
-        didSet {
-            needsDisplay = true
-        }
+        didSet { needsDisplay = true }
     }
     
     public var gridDivisions:Int = 10 {
-        didSet {
-            needsDisplay = true
-        }
+        didSet { needsDisplay = true }
     }
     
     public var gridStrokeColor = NSColor.gridColor() {
-        didSet {
-            needsDisplay = true
-        }
+        didSet { needsDisplay = true }
     }
     
     public var gridLineWidth:CGFloat = 1 {
-        didSet {
-            needsDisplay = true
-        }
+        didSet { needsDisplay = true }
     }
     
     public var curveStrokeColor:NSColor = NSColor(forControlTint: .BlueControlTint) {
-        didSet {
-            needsDisplay = true
-        }
+        didSet { needsDisplay = true }
     }
     
     public var curveLineWidth:CGFloat = 2 {
-        didSet {
-            needsDisplay = true
-        }
+        didSet { needsDisplay = true }
     }
     
     public var handleStrokeColor:NSColor = NSColor.grayColor() {
-        didSet {
-            needsDisplay = true
-        }
+        didSet { needsDisplay = true }
     }
     
     public var handleLineWidth:CGFloat = 2 {
-        didSet {
-            needsDisplay = true
-        }
+        didSet { needsDisplay = true }
     }
 
-    dynamic public var firstControlPoint:CGPoint = CGPointMake(0, 0) {
-        didSet {
-            needsDisplay = true
-        }
+    dynamic public var startControlPointValue:CGPoint = CGPointMake(0, 0) {
+        didSet { needsDisplay = true }
     }
     
-    public var firstControlPointKnobFillColor:NSColor = NSColor.whiteColor() {
-        didSet {
-            needsDisplay = true
-        }
+    public var startControlPointKnobFillColor:NSColor = NSColor.whiteColor() {
+        didSet { needsDisplay = true }
     }
 
-    public var firstControlPointKnobLineWidth:CGFloat = 2 {
-        didSet {
-            needsDisplay = true
-        }
+    public var startControlPointKnobLineWidth:CGFloat = 2 {
+        didSet { needsDisplay = true }
     }
 
-    public var firstControlPointKnobStrokeColor:NSColor = NSColor.redColor() {
-        didSet {
-            needsDisplay = true
-        }
+    public var startControlPointKnobStrokeColor:NSColor = NSColor.redColor() {
+        didSet { needsDisplay = true }
     }
     
-    dynamic public var secondControlPoint:CGPoint = CGPointMake(1, 1) {
-        didSet {
-            needsDisplay = true
-        }
+    dynamic public var endControlPointValue:CGPoint = CGPointMake(1, 1) {
+        didSet { needsDisplay = true }
     }
     
-    public var secondControlPointKnobLineWidth:CGFloat = 2 {
-        didSet {
-            needsDisplay = true
-        }
+    public var endControlPointKnobLineWidth:CGFloat = 2 {
+        didSet { needsDisplay = true }
     }
 
-    public var secondControlPointKnobFillColor:NSColor = NSColor.whiteColor() {
-        didSet {
-            needsDisplay = true
-        }
+    public var endControlPointKnobFillColor:NSColor = NSColor.whiteColor() {
+        didSet { needsDisplay = true }
     }
 
-    public var secondControlPointKnobStrokeColor:NSColor = NSColor.blueColor() {
-        didSet {
-            needsDisplay = true
-        }
+    public var endControlPointKnobStrokeColor:NSColor = NSColor.blueColor() {
+        didSet { needsDisplay = true }
     }
     
     public var controlPointKnobDiameter:CGFloat = 5 {
-        didSet {
-            needsDisplay = true
-        }
+        didSet { needsDisplay = true }
+    }
+    
+    override public var enabled:Bool {
+        didSet { panGestureRecognizer.enabled = enabled }
+    }
+    
+    private var _target:AnyObject?
+    private var _action:Selector = nil
+    private var panGestureRecognizer = NSPanGestureRecognizer();
+
+    override public var target:AnyObject? {
+        get { return _target }
+        set { _target = newValue }
+    }
+    
+    override public var action:Selector {
+        get { return _action }
+        set { _action = newValue }
     }
     
     override public init(frame frameRect: NSRect) {
@@ -128,64 +110,67 @@ public class AnimationCurveEditorView: NSView {
     }
     
     private func commonInit() {
-        let gestureRecognizer = NSPanGestureRecognizer(target: self, action: Selector("panGestureRecognizerDidRecognize:"))
-        addGestureRecognizer(gestureRecognizer)
+        panGestureRecognizer.target = self
+        panGestureRecognizer.action = Selector("panGestureRecognizerDidRecognize:")
+        addGestureRecognizer(panGestureRecognizer)
     }
     
-    private var firstControlPointKnobIsOnTop = true
+    private var startControlPointKnobIsOnTop = true
     
-    private var adjustingFirstControlPoint:Bool = false
-    private var adjustingSecondControlPoint:Bool = false
+    private var adjustingStartControlPoint:Bool = false
+    private var adjustingEndControlPoint:Bool = false
     
     @objc private func panGestureRecognizerDidRecognize(gestureRecognizer:NSPanGestureRecognizer) {
         if gestureRecognizer.state == .Began {
             let location = gestureRecognizer.locationInView(self)
-            let checkFirstControl:(CGFloat)->Bool = { tolerance in
-                if self.firstControlPointKnobBounds.insetBy(dx: -tolerance, dy: -tolerance).contains(location) {
-                    self.adjustingFirstControlPoint = true
-                    self.firstControlPointKnobIsOnTop = true
+            let checkStartControl:(CGFloat)->Bool = { tolerance in
+                if self.startControlPointKnobBounds.insetBy(dx: -tolerance, dy: -tolerance).contains(location) {
+                    self.adjustingStartControlPoint = true
+                    self.startControlPointKnobIsOnTop = true
                     return true
                 }
                 return false
             }
             
-            let checkSecondControl:(CGFloat)->Bool = { tolerance in
-                if self.secondControlPointKnobBounds.insetBy(dx: -tolerance, dy: -tolerance).contains(location) {
-                    self.adjustingSecondControlPoint = true
-                    self.firstControlPointKnobIsOnTop = false
+            let checkEndControl:(CGFloat)->Bool = { tolerance in
+                if self.endControlPointKnobBounds.insetBy(dx: -tolerance, dy: -tolerance).contains(location) {
+                    self.adjustingEndControlPoint = true
+                    self.startControlPointKnobIsOnTop = false
                     return true
                 }
                 return false
             }
             
-            if firstControlPointKnobIsOnTop {
-                if checkFirstControl(0) { return }
-                if checkSecondControl(0) { return }
-                if checkFirstControl(10) { return }
-                if checkSecondControl(10) { return }
+            if startControlPointKnobIsOnTop {
+                if checkStartControl(0) { return }
+                if checkEndControl(0) { return }
+                if checkStartControl(10) { return }
+                if checkEndControl(10) { return }
             } else {
-                if checkSecondControl(0) { return }
-                if checkFirstControl(0) { return }
-                if checkSecondControl(10) { return }
-                if checkFirstControl(10) { return }
+                if checkEndControl(0) { return }
+                if checkStartControl(0) { return }
+                if checkEndControl(10) { return }
+                if checkStartControl(10) { return }
             }
             
         } else if gestureRecognizer.state == .Changed {
-            if adjustingFirstControlPoint || adjustingSecondControlPoint {
+            if adjustingStartControlPoint || adjustingEndControlPoint {
                 let location = gestureRecognizer.locationInView(self)
                 let relativePoint = CGPoint(x: (location.x - squareBounds.minX)/squareBounds.width, y: (location.y - squareBounds.minY)/squareBounds.height)
                 
                 let restrictedPoint = CGPoint(x: max(min(relativePoint.x, 1), 0), y: max(min(relativePoint.y, 1), 0))
                 
-                if adjustingFirstControlPoint {
-                    firstControlPoint = restrictedPoint
-                } else if adjustingSecondControlPoint {
-                    secondControlPoint = restrictedPoint
+                if adjustingStartControlPoint {
+                    startControlPointValue = restrictedPoint
+                } else if adjustingEndControlPoint {
+                    endControlPointValue = restrictedPoint
                 }
+                
+                sendAction(action, to: target)
             }
         } else if gestureRecognizer.state == .Cancelled || gestureRecognizer.state == .Ended {
-            adjustingFirstControlPoint = false
-            adjustingSecondControlPoint = false
+            adjustingStartControlPoint = false
+            adjustingEndControlPoint = false
         }
     }
     
@@ -198,19 +183,19 @@ public class AnimationCurveEditorView: NSView {
     }
     
     private func controlPointsForRect(rect:CGRect) -> (CGFloat, CGFloat, CGFloat, CGFloat) {
-        let cp1x = firstControlPoint.x * rect.width + rect.minX
-        let cp1y = firstControlPoint.y * rect.height + rect.minY
-        let cp2x = secondControlPoint.x * rect.width + rect.minX
-        let cp2y = secondControlPoint.y * rect.height + rect.minY
+        let cp1x = startControlPointValue.x * rect.width + rect.minX
+        let cp1y = startControlPointValue.y * rect.height + rect.minY
+        let cp2x = endControlPointValue.x * rect.width + rect.minX
+        let cp2y = endControlPointValue.y * rect.height + rect.minY
         return (cp1x, cp1y, cp2x, cp2y)
     }
 
-    private var firstControlPointKnobBounds:CGRect {
+    private var startControlPointKnobBounds:CGRect {
         let (cp1x, cp1y, _, _) = controlPointsForRect(squareBounds)
         return CGRect(origin: CGPointMake(cp1x, cp1y), size: CGSizeZero).insetBy(dx: -controlPointKnobDiameter, dy: -controlPointKnobDiameter).integral
     }
     
-    private var secondControlPointKnobBounds:CGRect {
+    private var endControlPointKnobBounds:CGRect {
         let (_, _, cp2x, cp2y) = controlPointsForRect(squareBounds)
         return CGRect(origin: CGPointMake(cp2x, cp2y), size: CGSizeZero).insetBy(dx: -controlPointKnobDiameter, dy: -controlPointKnobDiameter).integral
     }
@@ -275,44 +260,45 @@ public class AnimationCurveEditorView: NSView {
         
         let (cp1x, cp1y, cp2x, cp2y) = controlPointsForRect(rect)
         
-        let drawFirstHandle = {
+        let drawStartHandle = {
             CGContextSetStrokeColorWithColor(ctx, self.handleStrokeColor.CGColor)
             CGContextSetLineWidth(ctx, self.handleLineWidth)
             CGContextMoveToPoint(ctx, rect.minX, rect.minY)
             CGContextAddLineToPoint(ctx, cp1x, cp1y)
             CGContextStrokePath(ctx)
             
-            let firstControlPointKnobBounds = self.firstControlPointKnobBounds
+            let startControlPointKnobBounds = self.startControlPointKnobBounds
             
-            CGContextSetFillColorWithColor(ctx, self.firstControlPointKnobFillColor.CGColor)
-            CGContextFillEllipseInRect(ctx, firstControlPointKnobBounds)
-            CGContextSetStrokeColorWithColor(ctx, self.firstControlPointKnobStrokeColor.CGColor)
-            CGContextSetLineWidth(ctx, self.firstControlPointKnobLineWidth)
-            CGContextStrokeEllipseInRect(ctx, firstControlPointKnobBounds)
+            CGContextSetFillColorWithColor(ctx, self.startControlPointKnobFillColor.CGColor)
+            CGContextFillEllipseInRect(ctx, startControlPointKnobBounds)
+            let strokeColor = self.enabled ? self.startControlPointKnobStrokeColor : NSColor.disabledControlTextColor()
+            CGContextSetStrokeColorWithColor(ctx, strokeColor.CGColor)
+            CGContextSetLineWidth(ctx, self.startControlPointKnobLineWidth)
+            CGContextStrokeEllipseInRect(ctx, startControlPointKnobBounds)
         }
         
-        let drawSecondHandle = {
+        let drawEndHandle = {
             CGContextSetStrokeColorWithColor(ctx, self.handleStrokeColor.CGColor)
             CGContextSetLineWidth(ctx, self.handleLineWidth)
             CGContextMoveToPoint(ctx, rect.maxX, rect.maxY)
             CGContextAddLineToPoint(ctx, cp2x, cp2y)
             CGContextStrokePath(ctx)
 
-            let secondControlPointKnobBounds = self.secondControlPointKnobBounds
-            CGContextSetFillColorWithColor(ctx, self.secondControlPointKnobFillColor.CGColor)
-            CGContextFillEllipseInRect(ctx, secondControlPointKnobBounds)
-            CGContextSetStrokeColorWithColor(ctx, self.secondControlPointKnobStrokeColor.CGColor)
-            CGContextSetLineWidth(ctx, self.secondControlPointKnobLineWidth)
-            CGContextStrokeEllipseInRect(ctx, secondControlPointKnobBounds)
-            
+            let endControlPointKnobBounds = self.endControlPointKnobBounds
+            CGContextSetFillColorWithColor(ctx, self.endControlPointKnobFillColor.CGColor)
+            CGContextFillEllipseInRect(ctx, endControlPointKnobBounds)
+            let strokeColor = self.enabled ? self.endControlPointKnobStrokeColor : NSColor.disabledControlTextColor()
+            CGContextSetStrokeColorWithColor(ctx, strokeColor.CGColor)
+            CGContextSetLineWidth(ctx, self.endControlPointKnobLineWidth)
+            CGContextStrokeEllipseInRect(ctx, endControlPointKnobBounds)
         }
 
-        if firstControlPointKnobIsOnTop {
-            drawSecondHandle()
-            drawFirstHandle()
+        if startControlPointKnobIsOnTop {
+            drawEndHandle()
+            drawStartHandle()
         } else {
-            drawFirstHandle()
-            drawSecondHandle()
+            drawStartHandle()
+            drawEndHandle()
         }
         
         CGContextRestoreGState(ctx)
