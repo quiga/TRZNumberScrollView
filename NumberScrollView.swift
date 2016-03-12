@@ -775,14 +775,15 @@ private extension TRZFont {
     
     var verticallyCenteredColonFont:TRZFont {
         guard #available(iOS 9.0, OSX 10.11, *) else { return self }
-        guard self.familyName == TRZFont.systemFontOfSize(self.pointSize).familyName else { return self }
         
         #if os(OSX)
+            guard self.familyName?.hasPrefix(".") == true else { return self }
             let descriptor = self.fontDescriptor
             let TRZFontFeatureSettingsAttribute = NSFontFeatureSettingsAttribute
             let TRZFontFeatureTypeIdentifierKey = NSFontFeatureTypeIdentifierKey
             let TRZFontFeatureSelectorIdentifierKey = NSFontFeatureSelectorIdentifierKey
         #elseif os(iOS) || os(tvOS)
+            guard self.familyName.hasPrefix(".") == true else { return self }
             let descriptor = self.fontDescriptor()
             let TRZFontFeatureSettingsAttribute = UIFontDescriptorFeatureSettingsAttribute
             let TRZFontFeatureTypeIdentifierKey = UIFontFeatureTypeIdentifierKey
