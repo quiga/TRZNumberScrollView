@@ -140,19 +140,36 @@ public class AnimationCurveEditorView: NSView {
     @objc private func panGestureRecognizerDidRecognize(gestureRecognizer:NSPanGestureRecognizer) {
         if gestureRecognizer.state == .Began {
             let location = gestureRecognizer.locationInView(self)
-            if firstControlPointKnobBounds.contains(location) {
-                adjustingFirstControlPoint = true
-                firstControlPointKnobIsOnTop = true
-            } else if secondControlPointKnobBounds.contains(location) {
-                adjustingSecondControlPoint = true
-                firstControlPointKnobIsOnTop = false
-            } else if firstControlPointKnobBounds.insetBy(dx: -10, dy: -10).contains(location) {
-                adjustingFirstControlPoint = true
-                firstControlPointKnobIsOnTop = true
-            } else if secondControlPointKnobBounds.insetBy(dx: -10, dy: -10).contains(location) {
-                adjustingSecondControlPoint = true
-                firstControlPointKnobIsOnTop = false
+            let checkFirstControl:(CGFloat)->Bool = { tolerance in
+                if self.firstControlPointKnobBounds.insetBy(dx: -tolerance, dy: -tolerance).contains(location) {
+                    self.adjustingFirstControlPoint = true
+                    self.firstControlPointKnobIsOnTop = true
+                    return true
+                }
+                return false
             }
+            
+            let checkSecondControl:(CGFloat)->Bool = { tolerance in
+                if self.secondControlPointKnobBounds.insetBy(dx: -tolerance, dy: -tolerance).contains(location) {
+                    self.adjustingSecondControlPoint = true
+                    self.firstControlPointKnobIsOnTop = false
+                    return true
+                }
+                return false
+            }
+            
+            if firstControlPointKnobIsOnTop {
+                if checkFirstControl(0) { return }
+                if checkSecondControl(0) { return }
+                if checkFirstControl(10) { return }
+                if checkSecondControl(10) { return }
+            } else {
+                if checkSecondControl(0) { return }
+                if checkFirstControl(0) { return }
+                if checkSecondControl(10) { return }
+                if checkFirstControl(10) { return }
+            }
+            
         } else if gestureRecognizer.state == .Changed {
             if adjustingFirstControlPoint || adjustingSecondControlPoint {
                 let location = gestureRecognizer.locationInView(self)
