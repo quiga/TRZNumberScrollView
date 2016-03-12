@@ -396,7 +396,7 @@ public class NumberScrollLayer: CALayer {
     private var _digitsImage:TRZImage?
     public var digitsImage:TRZImage! {
         if (_digitsImage == nil) {
-            _digitsImage = createDigitsImage()
+            _digitsImage = createDigitsImage(self.font)
         }
         return _digitsImage
     }
@@ -405,27 +405,25 @@ public class NumberScrollLayer: CALayer {
         return CGSize(width: digitsImage.size.width, height: digitsImage.size.height / CGFloat(10) / CGFloat(repetitions))
     }
 
-    private var fontAttributes:[String: AnyObject] {
-        get {
-            let style = NSParagraphStyle.defaultParagraphStyle().mutableCopy() as! NSMutableParagraphStyle
-            style.alignment = .Center
-            style.lineBreakMode = .ByClipping
-            style.lineSpacing = 0
-            return [NSFontAttributeName: font, NSParagraphStyleAttributeName: style, NSForegroundColorAttributeName: textColor]
-        }
+    private func fontAttributesForFont(font:TRZFont) -> [String: AnyObject] {
+        let style = NSParagraphStyle.defaultParagraphStyle().mutableCopy() as! NSMutableParagraphStyle
+        style.alignment = .Center
+        style.lineBreakMode = .ByClipping
+        style.lineSpacing = 0
+        return [NSFontAttributeName: font, NSParagraphStyleAttributeName: style, NSForegroundColorAttributeName: textColor]
     }
-
+    
     private let repetitions = 2
 
-    private func createImageForNonDigit(character:Character) -> TRZImage {
+    private func createImageForNonDigit(character:Character, font:TRZFont) -> TRZImage {
         let cacheKey = String(self.dynamicType) + ".characters." + String(character)
-        if let box = imageCache?.cachedImageBoxForKey(cacheKey, font: self.font, color: self.textColor) {
+        if let box = imageCache?.cachedImageBoxForKey(cacheKey, font: font, color: self.textColor) {
             _cachedCharacterImageBoxes.append(box)
             return box.acquire()
         }
 
         let str = String(character) as NSString
-        let fontAttributes = self.fontAttributes
+        let fontAttributes = fontAttributesForFont(font)
         let size = str.sizeWithAttributes(fontAttributes)
 
         var imageSize = digitsImageIndividualDigitSize
@@ -446,21 +444,21 @@ public class NumberScrollLayer: CALayer {
         #endif
 
 
-        if let box = imageCache?.setImage(image, key: cacheKey, font: self.font, color: self.textColor) {
+        if let box = imageCache?.setImage(image, key: cacheKey, font: font, color: self.textColor) {
             _cachedCharacterImageBoxes.append(box)
         }
 
         return image
     }
 
-    private func createDigitsImage() -> TRZImage {
+    private func createDigitsImage(font:TRZFont) -> TRZImage {
         let cacheKey = String(self.dynamicType) + ".digits"
-        if let box = imageCache?.cachedImageBoxForKey(cacheKey, font: self.font, color: self.textColor)             {
+        if let box = imageCache?.cachedImageBoxForKey(cacheKey, font: font, color: self.textColor) {
             _cachedDigitsImageBox = box
             return box.acquire()
         }
 
-        let fontAttributes = self.fontAttributes
+        let fontAttributes = fontAttributesForFont(font)
         let repetitions = self.repetitions
         var maxSize = CGSizeZero
 
@@ -495,7 +493,7 @@ public class NumberScrollLayer: CALayer {
             UIGraphicsEndImageContext()
         #endif
 
-        if let box = imageCache?.setImage(image, key: cacheKey, font: self.font, color: self.textColor) {
+        if let box = imageCache?.setImage(image, key: cacheKey, font: font, color: self.textColor) {
             _cachedDigitsImageBox = box
         }
 
@@ -513,10 +511,13 @@ public class NumberScrollLayer: CALayer {
             return
         }
 
-        var i = 0
-        for char in text.characters {
+        var contentLayersIndex = contentLayers.startIndex
+        var charactersIndex = text.characters.startIndex
+        
+        while charactersIndex < text.characters.endIndex {
+            let char = text.characters[charactersIndex]
             if let _ = Int(String(char)) {
-                let scrollLayer = contentLayers[i]
+                let scrollLayer = contentLayers[contentLayersIndex]
                 let contentsLayer = scrollLayer.sublayers![0]
 
                 #if os(OSX)
@@ -525,31 +526,67 @@ public class NumberScrollLayer: CALayer {
                     contentsLayer.contents = digitsImage.CGImage
                 #endif
             } else {
-                let contentsLayer = contentLayers[i]
+                let contentsLayer = contentLayers[contentLayersIndex]
+                
+                let needsVerticallyCenteredColon = needsVerticallyCenteredColonForCharacterAtIndex(charactersIndex, characters: text.characters)
+                let font = needsVerticallyCenteredColon ? self.font.verticallyCenteredColonFont : self.font
+                
+                let image = createImageForNonDigit(char, font: font)
+                
                 #if os(OSX)
-                    contentsLayer.contents = createImageForNonDigit(char)
+                    contentsLayer.contents = image
                 #elseif os(iOS) || os(tvOS)
-                    contentsLayer.contents = createImageForNonDigit(char).CGImage
+                    contentsLayer.contents = image.CGImage
                 #endif
             }
 
-            i++
+            contentLayersIndex++
+            charactersIndex++
         }
     }
+    
+    private func needsVerticallyCenteredColonForCharacterAtIndex(index:String.CharacterView.Index, characters:String.CharacterView) -> Bool {
+        guard characters[index] == ":" else { return false }
+        
+        if index != characters.startIndex {
+            let nextIndex = index.successor()
+            let prevIndex = index.predecessor()
+            if nextIndex != characters.endIndex {
+                let prevChar = String(characters[prevIndex])
+                let nextChar = String(characters[nextIndex])
+                
+                let prevCharIsDigit = Int(prevChar) != nil;
+                let nextCharIsDigit = Int(nextChar) != nil;
 
+                let isUpperCase = { (str:String) in str.uppercaseString == str && str.lowercaseString != str }
+                
+                if (prevCharIsDigit && nextCharIsDigit) ||
+                   (prevCharIsDigit && isUpperCase(nextChar)) ||
+                   (nextCharIsDigit && isUpperCase(prevChar)) {
+                    return true
+                }
+            }
+        }
+        
+        return false
+    }
+    
     private func relayoutScrollLayers() {
         let individualSize = digitsImageIndividualDigitSize
 
         var currentOrigin = CGPointZero
         var boundingSize = CGSizeZero
 
-        var i = 0
 
         let contentLayers = self.contentLayers
         var newLayers = [CALayer]()
 
-        for char in text.characters {
-            let currentLayer:CALayer? = (i < contentLayers.count) ? contentLayers[i] : nil
+        var contentLayersIndex = contentLayers.startIndex
+        var charactersIndex = text.characters.startIndex
+        
+        while charactersIndex < text.characters.endIndex {
+            let char = text.characters[charactersIndex]
+            let currentLayer:CALayer? = (contentLayersIndex < contentLayers.endIndex) ? contentLayers[contentLayersIndex] : nil
             if let _ = Int(String(char)) {
                 let scrollLayer:CALayer
                 if currentLayer?.valueForKey("myContents") as? String == "digits" {
@@ -586,8 +623,13 @@ public class NumberScrollLayer: CALayer {
                 boundingSize.height = max(boundingSize.height, scrollLayer.bounds.height)
             } else {
                 let charLayer:CALayer
+                
+                let needsVerticallyCenteredColon = needsVerticallyCenteredColonForCharacterAtIndex(charactersIndex, characters: text.characters)
+                let currentLayerMatches =
+                    currentLayer?.valueForKey("myContents") as? String == String(char) &&
+                    currentLayer?.valueForKey("verticallyCenteredColon") as? Bool == needsVerticallyCenteredColon
 
-                if currentLayer?.valueForKey("myContents") as? String == String(char) {
+                if currentLayerMatches {
                     charLayer = currentLayer!
                     charLayer.removeAllAnimations()
                     charLayer.frame.origin = currentOrigin
@@ -595,10 +637,13 @@ public class NumberScrollLayer: CALayer {
                     currentLayer?.removeFromSuperlayer()
 
                     charLayer = CALayer()
-                    let image = createImageForNonDigit(char)
+                    
+                    let font = needsVerticallyCenteredColon ? self.font.verticallyCenteredColonFont : self.font
+                    let image = createImageForNonDigit(char, font: font)
                     let imageSize = image.size
                     charLayer.setValue(String(char), forKey: "myContents")
-
+                    charLayer.setValue(needsVerticallyCenteredColon, forKey: "verticallyCenteredColon")
+                    
                     #if os(OSX)
                         charLayer.contents = image
                     #elseif os(iOS) || os(tvOS)
@@ -616,12 +661,13 @@ public class NumberScrollLayer: CALayer {
                 boundingSize.height = max(boundingSize.height, charLayer.bounds.height)
             }
 
-            i++
+            contentLayersIndex++
+            charactersIndex++
         }
-        if i < contentLayers.count {
-            for rest in (i..<contentLayers.count) {
-                contentLayers[rest].removeFromSuperlayer()
-            }
+        
+        while contentLayersIndex < contentLayers.endIndex {
+            contentLayers[contentLayersIndex].removeFromSuperlayer()
+            contentLayersIndex++
         }
 
         self.contentLayers = newLayers
@@ -719,6 +765,39 @@ private extension TRZFont {
                 ]
             ]
         ]
+        let newDescriptor = descriptor.fontDescriptorByAddingAttributes(attributes)
+        #if os(OSX)
+            return TRZFont(descriptor: newDescriptor, size: 0)!
+        #elseif os(iOS) || os(tvOS)
+            return TRZFont(descriptor: newDescriptor, size: 0)
+        #endif
+    }
+    
+    var verticallyCenteredColonFont:TRZFont {
+        guard #available(iOS 9.0, OSX 10.11, *) else { return self }
+        guard self.familyName == TRZFont.systemFontOfSize(self.pointSize).familyName else { return self }
+        
+        #if os(OSX)
+            let descriptor = self.fontDescriptor
+            let TRZFontFeatureSettingsAttribute = NSFontFeatureSettingsAttribute
+            let TRZFontFeatureTypeIdentifierKey = NSFontFeatureTypeIdentifierKey
+            let TRZFontFeatureSelectorIdentifierKey = NSFontFeatureSelectorIdentifierKey
+        #elseif os(iOS) || os(tvOS)
+            let descriptor = self.fontDescriptor()
+            let TRZFontFeatureSettingsAttribute = UIFontDescriptorFeatureSettingsAttribute
+            let TRZFontFeatureTypeIdentifierKey = UIFontFeatureTypeIdentifierKey
+            let TRZFontFeatureSelectorIdentifierKey = UIFontFeatureSelectorIdentifierKey
+        #endif
+        
+        let attributes = [
+            TRZFontFeatureSettingsAttribute: [
+                [
+                    TRZFontFeatureTypeIdentifierKey: kStylisticAlternativesType,
+                    TRZFontFeatureSelectorIdentifierKey: kStylisticAltThreeOnSelector
+                ]
+            ]
+        ]
+        
         let newDescriptor = descriptor.fontDescriptorByAddingAttributes(attributes)
         #if os(OSX)
             return TRZFont(descriptor: newDescriptor, size: 0)!
