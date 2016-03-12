@@ -17,6 +17,12 @@
 public class NumberScrollView: TRZView {
     public typealias AnimationDirection = NumberScrollLayer.AnimationDirection
 
+    public enum ImageCachePolicy {
+        case Never
+        case Global
+        case Custom(NumberScrollLayerImageCache)
+    }
+    
     public var text:String {
         get {
             return numberScrollLayer.text
@@ -38,7 +44,11 @@ public class NumberScrollView: TRZView {
     }
 
     public func setFont(font: TRZFont, textColor:TRZColor) {
+        let oldSize = numberScrollLayer.boundingSize
         numberScrollLayer.setFont(font, textColor: textColor)
+        if (numberScrollLayer.boundingSize != oldSize) {
+            invalidateIntrinsicContentSize()
+        }
     }
 
     public var textColor:TRZColor {
@@ -80,21 +90,23 @@ public class NumberScrollView: TRZView {
             numberScrollLayer.animationCurve = newValue
         }
     }
-
-    public init(numberScrollLayer:NumberScrollLayer) {
-        self.numberScrollLayer = numberScrollLayer
-        super.init(frame: CGRectZero)
-        commonInit()
+    
+    public var imageCachePolicy:ImageCachePolicy = .Global {
+        didSet {
+            switch imageCachePolicy {
+            case .Never: numberScrollLayer.imageCache = nil
+            case .Global: numberScrollLayer.imageCache = NumberScrollLayer.globalImageCache
+            case let .Custom(imageCache): numberScrollLayer.imageCache = imageCache
+            }
+        }
     }
-
+    
     override public init(frame: CGRect) {
-        self.numberScrollLayer = NumberScrollLayer()
         super.init(frame: frame)
         commonInit()
     }
 
     required public init?(coder aDecoder: NSCoder) {
-        self.numberScrollLayer = NumberScrollLayer()
         super.init(coder: aDecoder)
         commonInit()
     }
@@ -111,7 +123,7 @@ public class NumberScrollView: TRZView {
         layer.addSublayer(numberScrollLayer)
     }
 
-    private var numberScrollLayer:NumberScrollLayer
+    private var numberScrollLayer = NumberScrollLayer()
 
     public override func layoutSublayersOfLayer(layer: CALayer) {
         let innerSize = numberScrollLayer.boundingSize
@@ -642,12 +654,14 @@ public class NumberScrollLayer: CALayer {
         return CGRect(origin: point, size: CGSize(width: imageSize.width, height: individualHeight))
     }
 
-    public enum AnimationDirection {
+    @objc public enum AnimationDirection: Int {
         case Up
         case Down
     }
 
     public func playScrollAnimation(direction:AnimationDirection) {
+        if animationDuration == 0 { return }
+        
         let durationOffset = self.animationDuration/Double(contentLayers.count + 1)
 
         var offset = durationOffset * 2
