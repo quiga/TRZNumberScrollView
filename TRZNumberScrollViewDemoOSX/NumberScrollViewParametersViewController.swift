@@ -90,7 +90,7 @@ class NumberScrollViewParametersViewController: NSViewController, NSControlTextE
         }
     }
     
-    dynamic var font:NSFont = NSFont.systemFontOfSize(NSFont.systemFontSize()) {
+    dynamic var font:NSFont = NSFont.systemFontOfSize(48) {
         didSet {
             if oldValue != font {
                 delegate?.parametersViewController?(self, didChangeFont: font)
