@@ -75,13 +75,15 @@ public class NumberScrollView: TRZView {
         set { numberScrollLayer.animationCurve = newValue }
     }
     
-    public var imageCachePolicy:ImageCachePolicy = .Global {
+    public var imageCachePolicy:ImageCachePolicy = {
+        #if os(OSX)
+            return .Never
+        #elseif os(iOS) || os(tvOS)
+            return .Global
+        #endif
+    }() {
         didSet {
-            switch imageCachePolicy {
-            case .Never: numberScrollLayer.imageCache = nil
-            case .Global: numberScrollLayer.imageCache = NumberScrollLayer.globalImageCache
-            case let .Custom(imageCache): numberScrollLayer.imageCache = imageCache
-            }
+            configureImageCache()
         }
     }
     
@@ -105,10 +107,19 @@ public class NumberScrollView: TRZView {
             let layer = self.layer
         #endif
         layer.addSublayer(numberScrollLayer)
+        configureImageCache()
     }
 
     private var numberScrollLayer = NumberScrollLayer()
 
+    private func configureImageCache() {
+        switch imageCachePolicy {
+        case .Never: numberScrollLayer.imageCache = nil
+        case .Global: numberScrollLayer.imageCache = NumberScrollLayer.globalImageCache
+        case let .Custom(imageCache): numberScrollLayer.imageCache = imageCache
+        }
+    }
+    
     public override func layoutSublayersOfLayer(layer: CALayer) {
         let innerSize = numberScrollLayer.boundingSize
         let outerRect = layer.bounds

@@ -37,6 +37,6 @@ The included demo project for OS X lets you play with these parameters so you ca
 
 Notes
 ---
-By default, generated images are cached in a global, thread-safe cache. However, you can override this behavior by setting the `imageCachePolicy` property on the `NumberScrollView`, or by setting the `imageCache` property on a `NumberScrollLayer` to an appropriate value.
+By default, generated images are cached in a global, thread-safe cache on iOS (images are not cached by default on OS X). However, you can override this behavior by setting the `imageCachePolicy` property on the `NumberScrollView`, or by setting the `imageCache` property on a `NumberScrollLayer` to an appropriate value.
 
-The default cache on iOS automatically evicts its unused contents when the app is backgrounded or when the app receives a memory warning. The default cache on OS X does not automatically evict its unused contents, but you can do so manually by calling `NumberScrollLayer.evictGlobalImageCache()`.
+The default cache implementation on iOS automatically evicts its unused contents when the app is backgrounded or when the app receives a memory warning. The default cache on OS X does not automatically evict its unused contents, but you can do so manually by calling `NumberScrollLayer.evictGlobalImageCache()`.

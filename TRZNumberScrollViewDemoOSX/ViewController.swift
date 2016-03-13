@@ -53,7 +53,6 @@ class NumberScrollViewContainerViewController: NSViewController {
     
     override func viewDidLoad() {
         backgroundColorView.backgroundColor = NSColor.whiteColor()
-        numberScrollView.imageCachePolicy = .Never //Turn off image caching
     }
 }
 
