@@ -54,33 +54,17 @@ class NumberScrollViewParametersViewController: NSViewController, NSControlTextE
         }
     }
     
-    private dynamic var curvePoint1x:CGFloat = 0 {
+    dynamic var startControlPoint:ObservablePoint = ObservablePoint(x: 0, y: 0) {
         didSet {
-            if oldValue != curvePoint1x {
+            if oldValue != startControlPoint {
                 delegate?.parametersViewController?(self, didChangeAnimationCurve: animationCurve)
             }
         }
     }
     
-    private dynamic var curvePoint1y:CGFloat = 0 {
+    dynamic var endControlPoint:ObservablePoint = ObservablePoint(x: 0.1, y: 1)  {
         didSet {
-            if oldValue != curvePoint1y {
-                delegate?.parametersViewController?(self, didChangeAnimationCurve: animationCurve)
-            }
-        }
-    }
-    
-    private dynamic var curvePoint2x:CGFloat = 0.1 {
-        didSet {
-            if oldValue != curvePoint2x {
-                delegate?.parametersViewController?(self, didChangeAnimationCurve: animationCurve)
-            }
-        }
-    }
-    
-    private dynamic var curvePoint2y:CGFloat = 1 {
-        didSet {
-            if oldValue != curvePoint2y {
+            if oldValue != endControlPoint {
                 delegate?.parametersViewController?(self, didChangeAnimationCurve: animationCurve)
             }
         }
@@ -113,33 +97,29 @@ class NumberScrollViewParametersViewController: NSViewController, NSControlTextE
     }
     
     var animationCurve:CAMediaTimingFunction {
-        return CAMediaTimingFunction(controlPoints: Float(curvePoint1x), Float(curvePoint1y), Float(curvePoint2x), Float(curvePoint2y))
+        return CAMediaTimingFunction(controlPoints: Float(startControlPoint.x), Float(startControlPoint.y), Float(endControlPoint.x), Float(endControlPoint.y))
     }
     
     dynamic var automaticallyCommit:Bool = true
     
-    private func updateAnimationEditorCurves() {
-        animationCurveEditor.startControlPointValue = CGPointMake(curvePoint1x, curvePoint1y)
-        animationCurveEditor.endControlPointValue = CGPointMake(curvePoint2x, curvePoint2y)
+    func configureAnimationCurveEditor() {
+        animationCurveEditor.startControlPointValue = self.startControlPoint.pointValue
+        animationCurveEditor.endControlPointValue = self.endControlPoint.pointValue
+        
     }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        updateAnimationEditorCurves()
+        
+        configureAnimationCurveEditor();
+        
         animationCurveEditor.bind("enabled", toObject: self, withKeyPath: "animationEnabled", options: nil)
-        animationCurveEditor.target = self
-        animationCurveEditor.action = Selector("animationCurveEditorDidUpdate:")
+        let toNSValueOptions = [NSValueTransformerBindingOption: ObservablePointToNSValueTransformer()]
+        bind("startControlPoint", toObject: animationCurveEditor, withKeyPath: "startControlPointValue", options: toNSValueOptions)
+        bind("endControlPoint", toObject: animationCurveEditor, withKeyPath: "endControlPointValue", options: toNSValueOptions)
     }
     
-    @objc private func animationCurveEditorDidUpdate(sender: AnimationCurveEditor) {
-        curvePoint1x = sender.startControlPointValue.x
-        curvePoint1y = sender.startControlPointValue.y
-        curvePoint2x = sender.endControlPointValue.x
-        curvePoint2y = sender.endControlPointValue.y
-    }
-    
-    @IBAction private func curvePointBoxDidEndEditing(sender: NSTextField) {
-        updateAnimationEditorCurves()
+    @IBAction private func didEndEditingPointTextField(sender: NSTextField) {
+        configureAnimationCurveEditor()
     }
     
     @objc func control(control: NSControl, textShouldEndEditing fieldEditor: NSText) -> Bool {
@@ -199,5 +179,38 @@ class NumberScrollViewParametersViewController: NSViewController, NSControlTextE
         guard let font = value as? NSFont else { return nil }
         
         return String(format: "%@ %.1fpt", font.displayName ?? "(null)", font.pointSize)
+    }
+}
+
+class ObservablePointToNSValueTransformer: NSValueTransformer {
+    override class func transformedValueClass() -> AnyClass {
+        return NSValue.self
+    }
+    
+    override class func allowsReverseTransformation() -> Bool {
+        return true
+    }
+    
+    override func transformedValue(value: AnyObject?) -> AnyObject? {
+        if let point = value as? ObservablePoint {
+            return NSValue(point:CGPoint(x:point.x , y: point.y))
+        } else if let point = (value as? NSValue)?.pointValue {
+            return ObservablePoint(x: point.x, y: point.y)
+        }
+        return nil
+    }
+}
+
+class ObservablePoint:NSObject {
+    dynamic var x:CGFloat = 0
+    dynamic var y:CGFloat = 0
+    
+    init(x:CGFloat, y:CGFloat) {
+        self.x = x
+        self.y = y
+    }
+    
+    var pointValue:CGPoint {
+        return CGPoint(x: x, y: y)
     }
 }

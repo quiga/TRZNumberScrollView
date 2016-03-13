@@ -8,6 +8,7 @@
 
 import Cocoa
 
+
 public class AnimationCurveEditor: NSControl {
     public var backgroundColor:NSColor? = NSColor.whiteColor() {
         didSet { needsDisplay = true }
@@ -277,7 +278,7 @@ public class AnimationCurveEditor: NSControl {
             CGContextStrokeEllipseInRect(ctx, startControlPointKnobBounds)
         }
         
-        let drawEndHandle = {
+        let drawSecondHandle = {
             CGContextSetStrokeColorWithColor(ctx, self.handleStrokeColor.CGColor)
             CGContextSetLineWidth(ctx, self.handleLineWidth)
             CGContextMoveToPoint(ctx, rect.maxX, rect.maxY)
@@ -294,11 +295,11 @@ public class AnimationCurveEditor: NSControl {
         }
 
         if startControlPointKnobIsOnTop {
-            drawEndHandle()
+            drawSecondHandle()
             drawStartHandle()
         } else {
             drawStartHandle()
-            drawEndHandle()
+            drawSecondHandle()
         }
         
         CGContextRestoreGState(ctx)

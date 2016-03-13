@@ -779,24 +779,6 @@
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="hMx-ax-enL">
-                                <rect key="frame" x="20" y="77" width="44" height="22"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="Bjg-0U-0fc">
-                                    <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" minimumFractionDigits="1" maximumFractionDigits="3" id="86V-kr-XFX">
-                                        <real key="minimum" value="0.0"/>
-                                        <real key="maximum" value="1"/>
-                                    </numberFormatter>
-                                    <font key="font" metaFont="system"/>
-                                    <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                </textFieldCell>
-                                <connections>
-                                    <action selector="curvePointBoxDidEndEditing:" target="n3r-01-PKD" id="7AC-BX-JfI"/>
-                                    <binding destination="n3r-01-PKD" name="enabled" keyPath="self.animationEnabled" id="iwA-H0-wAo"/>
-                                    <binding destination="n3r-01-PKD" name="value" keyPath="self.curvePoint1x" id="waB-UZ-Fns"/>
-                                    <outlet property="delegate" destination="n3r-01-PKD" id="Mar-Ll-CDq"/>
-                                </connections>
-                            </textField>
                             <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ywV-9N-pio">
                                 <rect key="frame" x="116" y="77" width="44" height="22"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="vX6-iE-GtM">
@@ -809,9 +791,9 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                                 <connections>
-                                    <action selector="curvePointBoxDidEndEditing:" target="n3r-01-PKD" id="nKb-sO-kcH"/>
+                                    <action selector="didEndEditingPointTextField:" target="n3r-01-PKD" id="eSv-CY-ida"/>
                                     <binding destination="n3r-01-PKD" name="enabled" keyPath="self.animationEnabled" id="7Z2-cf-lRu"/>
-                                    <binding destination="n3r-01-PKD" name="value" keyPath="self.curvePoint2x" id="etj-YI-HkG"/>
+                                    <binding destination="n3r-01-PKD" name="value" keyPath="self.endControlPoint.x" id="wJ0-ou-yuo"/>
                                     <outlet property="delegate" destination="n3r-01-PKD" id="Zko-w9-1IF"/>
                                 </connections>
                             </textField>
@@ -827,9 +809,9 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                                 <connections>
-                                    <action selector="curvePointBoxDidEndEditing:" target="n3r-01-PKD" id="psK-Xa-bjo"/>
+                                    <action selector="didEndEditingPointTextField:" target="n3r-01-PKD" id="juI-8r-W42"/>
                                     <binding destination="n3r-01-PKD" name="enabled" keyPath="self.animationEnabled" id="BSa-yb-J1x"/>
-                                    <binding destination="n3r-01-PKD" name="value" keyPath="self.curvePoint2y" id="uh7-aN-dbT"/>
+                                    <binding destination="n3r-01-PKD" name="value" keyPath="self.endControlPoint.y" id="uWM-Pl-51s"/>
                                     <outlet property="delegate" destination="n3r-01-PKD" id="YKo-j3-2RR"/>
                                 </connections>
                             </textField>
@@ -976,10 +958,28 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                                 <connections>
-                                    <action selector="curvePointBoxDidEndEditing:" target="n3r-01-PKD" id="jAv-2o-qiP"/>
+                                    <action selector="didEndEditingPointTextField:" target="n3r-01-PKD" id="rea-GB-mbL"/>
                                     <binding destination="n3r-01-PKD" name="enabled" keyPath="self.animationEnabled" id="pCE-HP-utc"/>
-                                    <binding destination="n3r-01-PKD" name="value" keyPath="self.curvePoint1y" id="Voc-eS-ACm"/>
+                                    <binding destination="n3r-01-PKD" name="value" keyPath="self.startControlPoint.y" id="IiS-ib-O34"/>
                                     <outlet property="delegate" destination="n3r-01-PKD" id="Heu-2i-6Yo"/>
+                                </connections>
+                            </textField>
+                            <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="hMx-ax-enL">
+                                <rect key="frame" x="20" y="77" width="44" height="22"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="Bjg-0U-0fc">
+                                    <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" minimumFractionDigits="1" maximumFractionDigits="3" id="86V-kr-XFX">
+                                        <real key="minimum" value="0.0"/>
+                                        <real key="maximum" value="1"/>
+                                    </numberFormatter>
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                                <connections>
+                                    <action selector="didEndEditingPointTextField:" target="n3r-01-PKD" id="HaC-Au-R7k"/>
+                                    <binding destination="n3r-01-PKD" name="enabled" keyPath="self.animationEnabled" id="iwA-H0-wAo"/>
+                                    <binding destination="n3r-01-PKD" name="value" keyPath="self.startControlPoint.x" id="xhA-US-bCJ"/>
+                                    <outlet property="delegate" destination="n3r-01-PKD" id="Mar-Ll-CDq"/>
                                 </connections>
                             </textField>
                         </subviews>
