@@ -139,11 +139,13 @@ public class NumberScrollView: TRZView {
     }
     
     public override func layoutSublayersOfLayer(layer: CALayer) {
-        let innerSize = numberScrollLayer.boundingSize
-        let outerRect = layer.bounds
-        let centerOrigin = CGPoint(x: outerRect.origin.x + (outerRect.size.width - innerSize.width) / 2, y: outerRect.origin.y + (outerRect.size.height - innerSize.height) / 2)
-        
-        numberScrollLayer.frame = CGRectIntegral(CGRect(origin: centerOrigin, size: innerSize))
+        if layer == self.layer {
+            let innerSize = numberScrollLayer.boundingSize
+            let outerRect = layer.bounds
+            let centerOrigin = CGPoint(x: outerRect.origin.x + (outerRect.size.width - innerSize.width) / 2, y: outerRect.origin.y + (outerRect.size.height - innerSize.height) / 2)
+            
+            numberScrollLayer.frame = CGRectIntegral(CGRect(origin: centerOrigin, size: innerSize))
+        }
     }
     
     #if os(OSX)
@@ -852,10 +854,7 @@ public class NumberScrollLayer: CALayer {
         didSet {
             if fontSmoothingBackgroundColor != oldValue {
                 releaseCachedImages()
-                CATransaction.begin()
-                CATransaction.setDisableActions(true)
                 recolorScrollLayers()
-                CATransaction.commit()
             }
         }
     }
@@ -864,10 +863,7 @@ public class NumberScrollLayer: CALayer {
     override public var backgroundColor:CGColor? {
         didSet {
             releaseCachedImages()
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
             recolorScrollLayers()
-            CATransaction.commit()
         }
     }
 }
