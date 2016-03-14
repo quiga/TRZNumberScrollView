@@ -118,6 +118,7 @@ public class NumberScrollView: TRZView {
     private func commonInit() {
         #if os(OSX)
             let layer = NumberScrollLayer()
+            layer.delegate = self
             self.layer = layer
             self.wantsLayer = true
         #endif
@@ -342,7 +343,7 @@ public class NumberScrollLayer: CALayer {
     public var text:String = "" {
         didSet {
             if text != oldValue {
-                performWithoutAnimation() {
+                performWithoutImplicitAnimation() {
                     relayoutScrollLayers()
                     setScrollLayerContents()
                 }
@@ -374,9 +375,7 @@ public class NumberScrollLayer: CALayer {
                 releaseCachedImages()
                 _textColor = newValue
                 if (!text.isEmpty) {
-                    performWithoutAnimation() {
-                        recolorScrollLayers()
-                    }
+                    recolorScrollLayers()
                 }
             }
         }
@@ -396,7 +395,7 @@ public class NumberScrollLayer: CALayer {
                 releaseCachedImages()
                 _font = newFont
                 if (!text.isEmpty) {
-                    performWithoutAnimation() {
+                    performWithoutImplicitAnimation() {
                         contentLayers.forEach({ $0.removeFromSuperlayer() })
                         contentLayers.removeAll()
                         relayoutScrollLayers()
@@ -814,7 +813,7 @@ public class NumberScrollLayer: CALayer {
         let durationOffset = animationDuration/Double(contentLayers.count + 1)
         
         var offset = durationOffset * 2
-        performWithoutAnimation() {
+        performWithoutImplicitAnimation() {
             CATransaction.setCompletionBlock(completion)
             for (i, char) in text.characters.enumerate() {
                 if let digit = Int(String(char)) {
@@ -842,9 +841,7 @@ public class NumberScrollLayer: CALayer {
         didSet {
             if fontSmoothingBackgroundColor != oldValue {
                 releaseCachedImages()
-                performWithoutAnimation() {
-                    recolorScrollLayers()
-                }
+                recolorScrollLayers()
             }
         }
     }
@@ -854,14 +851,12 @@ public class NumberScrollLayer: CALayer {
         didSet {
             if !CGColorEqualToColor(backgroundColor, oldValue) {
                 releaseCachedImages()
-                performWithoutAnimation() {
-                    recolorScrollLayers()
-                }
+                recolorScrollLayers()
             }
         }
     }
     
-    private func performWithoutAnimation(@noescape block:()->Void) {
+    private func performWithoutImplicitAnimation(@noescape block:()->Void) {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         block()
