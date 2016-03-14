@@ -545,8 +545,8 @@ public class NumberScrollLayer: CALayer {
                 #endif
             }
             
-            contentLayersIndex++
-            charactersIndex++
+            contentLayersIndex = contentLayersIndex.successor()
+            charactersIndex = charactersIndex.successor()
         }
     }
     
@@ -666,13 +666,13 @@ public class NumberScrollLayer: CALayer {
                 boundingSize.height = max(boundingSize.height, charLayer.bounds.height)
             }
             
-            contentLayersIndex++
-            charactersIndex++
+            contentLayersIndex = contentLayersIndex.successor()
+            charactersIndex = charactersIndex.successor()
         }
         
         while contentLayersIndex < contentLayers.endIndex {
             contentLayers[contentLayersIndex].removeFromSuperlayer()
-            contentLayersIndex++
+            contentLayersIndex = contentLayersIndex.successor()
         }
         
         self.contentLayers = newLayers
@@ -680,12 +680,10 @@ public class NumberScrollLayer: CALayer {
     }
     
     private func setScrollLayerContents() {
-        var i = 0
-        for char in text.characters {
+        for (i, char) in text.characters.enumerate() {
             if let digit = Int(String(char)) {
                 contentLayers[i].bounds.origin = upperRectForDigit(digit).origin
             }
-            i++
         }
     }
     
@@ -719,8 +717,7 @@ public class NumberScrollLayer: CALayer {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         CATransaction.setCompletionBlock(completion)
-        var i = 0
-        for char in text.characters {
+        for (i, char) in text.characters.enumerate() {
             if let digit = Int(String(char)) {
                 let scrollLayer = contentLayers[i]
                 let animation = CABasicAnimation(keyPath: "bounds.origin.y")
@@ -733,7 +730,6 @@ public class NumberScrollLayer: CALayer {
                 scrollLayer.addAnimation(animation, forKey: "scroll")
             }
             offset += durationOffset
-            i++
         }
         CATransaction.commit()
     }

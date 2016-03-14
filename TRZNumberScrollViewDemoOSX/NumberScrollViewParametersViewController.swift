@@ -143,12 +143,12 @@ class NumberScrollViewParametersViewController: NSViewController, NSControlTextE
         fontManager.orderFrontFontPanel(self)
     }
     
-    override func changeFont(sender: AnyObject?) {
+    @objc override func changeFont(sender: AnyObject?) {
         font = sender?.convertFont(font) ?? NSFont.systemFontOfSize(NSFont.systemFontSize())
         displayFont = NSFont(descriptor: font.fontDescriptor, size: NSFont.systemFontSize())!
     }
     
-    private func changeAttributes(sender: AnyObject?) {
+    @objc private func changeAttributes(sender: AnyObject?) {
         textColor = (sender?.convertAttributes([String: AnyObject]())["NSColor"] as? NSColor) ?? NSColor.blackColor()
     }
     
