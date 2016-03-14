@@ -48,7 +48,7 @@ Subpixel Antialiasing
 ---
 This library supports subpixel antialiasing on OS X. This feature can be enabled via one of two different ways:
 
-1. By setting an opaque (alpha == 1) color as the `backgroundColor` of the `NumberScrollView` (or if using the layer directly, the `NumberScrollLayer`). Note that, since the `NumberScrollLayer` is a sublayer of the `NumberScrollView`'s `layer` property, setting `layer.backgroundColor` directly will not give the correct results.
+1. By setting an opaque (alpha == 1) color as the `backgroundColor` of the `NumberScrollView` (or if using the layer directly, the `NumberScrollLayer`).
 2. Through the use of __private API__, which enables subpixel antialiasing on non-opaque backgrounds. This method is not perfect, due to the nature of subpixel antialiasing, but can produce "good enough" results.
 
 To enable subpixel antialiasing on non-opaque backgrounds, follow these steps:

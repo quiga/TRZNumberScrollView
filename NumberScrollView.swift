@@ -117,34 +117,22 @@ public class NumberScrollView: TRZView {
     
     private func commonInit() {
         #if os(OSX)
-            let layer = CALayer()
+            let layer = NumberScrollLayer()
             self.layer = layer
             self.wantsLayer = true
-            layer.delegate = self
-        #elseif os(iOS) || os(tvOS)
-            let layer = self.layer
         #endif
-        layer.addSublayer(numberScrollLayer)
         configureImageCache()
     }
     
-    private var numberScrollLayer = NumberScrollLayer()
+    private var numberScrollLayer:NumberScrollLayer {
+        return self.layer as! NumberScrollLayer
+    }
     
     private func configureImageCache() {
         switch imageCachePolicy {
         case .Never: numberScrollLayer.imageCache = nil
         case .Global: numberScrollLayer.imageCache = NumberScrollLayer.globalImageCache
         case let .Custom(imageCache): numberScrollLayer.imageCache = imageCache
-        }
-    }
-    
-    public override func layoutSublayersOfLayer(layer: CALayer) {
-        if layer == self.layer {
-            let innerSize = numberScrollLayer.boundingSize
-            let outerRect = layer.bounds
-            let centerOrigin = CGPoint(x: outerRect.origin.x + (outerRect.size.width - innerSize.width) / 2, y: outerRect.origin.y + (outerRect.size.height - innerSize.height) / 2)
-            
-            numberScrollLayer.frame = CGRectIntegral(CGRect(origin: centerOrigin, size: innerSize))
         }
     }
     
@@ -157,26 +145,30 @@ public class NumberScrollView: TRZView {
     }
     #elseif os(iOS) || os(tvOS)
     override public func intrinsicContentSize() -> CGSize {
-    return numberScrollLayer.boundingSize
+        return numberScrollLayer.boundingSize
     }
     
     override public func sizeThatFits(size: CGSize) -> CGSize {
-    return intrinsicContentSize()
+        return intrinsicContentSize()
     }
     #endif
     
     #if os(OSX)
     public var backgroundColor:TRZColor? {
-        didSet {
-            layer?.backgroundColor = backgroundColor?.CGColor
-            numberScrollLayer.backgroundColor = backgroundColor?.CGColor
+        get {
+            if let bkgColor = numberScrollLayer.backgroundColor {
+                return TRZColor(CGColor: bkgColor)
+            } else {
+                return nil
+            }
         }
+        set { numberScrollLayer.backgroundColor = newValue?.CGColor }
     }
-    #elseif os(iOS) || os(tvOS)
-    public override var backgroundColor:TRZColor? {
-        didSet {
-            numberScrollLayer.backgroundColor = backgroundColor?.CGColor
-        }
+    #endif
+    
+    #if os(iOS) || os(tvOS)
+    override public class func layerClass() -> AnyClass {
+        return NumberScrollLayer.self
     }
     #endif
 }
@@ -350,11 +342,10 @@ public class NumberScrollLayer: CALayer {
     public var text:String = "" {
         didSet {
             if text != oldValue {
-                CATransaction.begin()
-                CATransaction.setDisableActions(true)
-                relayoutScrollLayers()
-                setScrollLayerContents()
-                CATransaction.commit()
+                performWithoutAnimation() {
+                    relayoutScrollLayers()
+                    setScrollLayerContents()
+                }
             }
         }
     }
@@ -383,10 +374,9 @@ public class NumberScrollLayer: CALayer {
                 releaseCachedImages()
                 _textColor = newValue
                 if (!text.isEmpty) {
-                    CATransaction.begin()
-                    CATransaction.setDisableActions(true)
-                    recolorScrollLayers()
-                    CATransaction.commit()
+                    performWithoutAnimation() {
+                        recolorScrollLayers()
+                    }
                 }
             }
         }
@@ -406,13 +396,12 @@ public class NumberScrollLayer: CALayer {
                 releaseCachedImages()
                 _font = newFont
                 if (!text.isEmpty) {
-                    CATransaction.begin()
-                    CATransaction.setDisableActions(true)
-                    contentLayers.forEach({ $0.removeFromSuperlayer() })
-                    contentLayers.removeAll()
-                    relayoutScrollLayers()
-                    setScrollLayerContents()
-                    CATransaction.commit()
+                    performWithoutAnimation() {
+                        contentLayers.forEach({ $0.removeFromSuperlayer() })
+                        contentLayers.removeAll()
+                        relayoutScrollLayers()
+                        setScrollLayerContents()
+                    }
                 }
             }
         }
@@ -825,24 +814,23 @@ public class NumberScrollLayer: CALayer {
         let durationOffset = animationDuration/Double(contentLayers.count + 1)
         
         var offset = durationOffset * 2
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        CATransaction.setCompletionBlock(completion)
-        for (i, char) in text.characters.enumerate() {
-            if let digit = Int(String(char)) {
-                let scrollLayer = contentLayers[i]
-                let animation = CABasicAnimation(keyPath: "bounds.origin.y")
-                let upOrigin = upperRectForDigit(digit).origin.y
-                let downOrigin = lowerRectForDigit(digit).origin.y
-                scrollLayer.bounds.origin.y =  (animationDirection == .Up) ? downOrigin : upOrigin
-                animation.fromValue = (animationDirection == .Up) ? upOrigin : downOrigin
-                animation.timingFunction = self.animationCurve
-                animation.duration = offset
-                scrollLayer.addAnimation(animation, forKey: "scroll")
+        performWithoutAnimation() {
+            CATransaction.setCompletionBlock(completion)
+            for (i, char) in text.characters.enumerate() {
+                if let digit = Int(String(char)) {
+                    let scrollLayer = contentLayers[i]
+                    let animation = CABasicAnimation(keyPath: "bounds.origin.y")
+                    let upOrigin = upperRectForDigit(digit).origin.y
+                    let downOrigin = lowerRectForDigit(digit).origin.y
+                    scrollLayer.bounds.origin.y =  (animationDirection == .Up) ? downOrigin : upOrigin
+                    animation.fromValue = (animationDirection == .Up) ? upOrigin : downOrigin
+                    animation.timingFunction = self.animationCurve
+                    animation.duration = offset
+                    scrollLayer.addAnimation(animation, forKey: "scroll")
+                }
+                offset += durationOffset
             }
-            offset += durationOffset
         }
-        CATransaction.commit()
     }
     
     public static func evictGlobalImageCache() {
@@ -854,7 +842,9 @@ public class NumberScrollLayer: CALayer {
         didSet {
             if fontSmoothingBackgroundColor != oldValue {
                 releaseCachedImages()
-                recolorScrollLayers()
+                performWithoutAnimation() {
+                    recolorScrollLayers()
+                }
             }
         }
     }
@@ -862,9 +852,20 @@ public class NumberScrollLayer: CALayer {
     
     override public var backgroundColor:CGColor? {
         didSet {
-            releaseCachedImages()
-            recolorScrollLayers()
+            if !CGColorEqualToColor(backgroundColor, oldValue) {
+                releaseCachedImages()
+                performWithoutAnimation() {
+                    recolorScrollLayers()
+                }
+            }
         }
+    }
+    
+    private func performWithoutAnimation(@noescape block:()->Void) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        block()
+        CATransaction.commit()
     }
 }
 
