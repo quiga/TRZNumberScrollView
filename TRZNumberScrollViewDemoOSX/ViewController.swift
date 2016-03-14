@@ -26,7 +26,7 @@ class ViewController: NSSplitViewController, NumberScrollViewParametersViewContr
     }
     
     func parametersViewControllerDidCommit(sender: NumberScrollViewParametersViewController) {
-        numberScrollViewContainer.numberScrollView.setText(parametersViewController.text, animated: parametersViewController.animationEnabled, direction: parametersViewController.animationDirection)
+        numberScrollViewContainer.numberScrollView.setText(parametersViewController.text, animated: parametersViewController.animationEnabled)
     }
     
     func parametersViewController(sender: NumberScrollViewParametersViewController, didChangeAnimationCurve animationCurve: CAMediaTimingFunction) {
@@ -44,6 +44,10 @@ class ViewController: NSSplitViewController, NumberScrollViewParametersViewContr
     func parametersViewController(sender: NumberScrollViewParametersViewController, didChangeTextColor textColor: NSColor) {
         numberScrollViewContainer.numberScrollView.textColor = textColor
     }
+    
+    func parametersViewController(sender: NumberScrollViewParametersViewController, didChangeAnimationDirection animationDirection: NumberScrollView.AnimationDirection) {
+        numberScrollViewContainer.numberScrollView.animationDirection = animationDirection
+    }
 }
 
 
@@ -53,6 +57,7 @@ class NumberScrollViewContainerViewController: NSViewController {
     
     override func viewDidLoad() {
         backgroundColorView.backgroundColor = NSColor.whiteColor()
+        numberScrollView.backgroundColor = backgroundColorView.backgroundColor
     }
 }
 

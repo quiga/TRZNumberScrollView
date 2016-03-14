@@ -15,6 +15,7 @@
 #endif
 
 public class NumberScrollView: TRZView {
+    
     public typealias AnimationDirection = NumberScrollLayer.AnimationDirection
     
     public enum ImageCachePolicy {
@@ -34,10 +35,10 @@ public class NumberScrollView: TRZView {
         }
     }
     
-    public func setText(text:String, animated:Bool, direction:AnimationDirection, completion:(()->Void)? = nil) {
+    public func setText(text:String, animated:Bool,completion:(()->Void)? = nil) {
         self.text = text
         if animated {
-            self.numberScrollLayer.playScrollAnimation(direction, completion: completion)
+            self.numberScrollLayer.playScrollAnimation(completion)
         } else {
             completion?()
         }
@@ -77,6 +78,11 @@ public class NumberScrollView: TRZView {
         set { numberScrollLayer.animationCurve = newValue }
     }
     
+    public var animationDirection:AnimationDirection {
+        get { return numberScrollLayer.animationDirection }
+        set { numberScrollLayer.animationDirection = newValue }
+    }
+    
     public var imageCachePolicy:ImageCachePolicy = {
         #if os(OSX)
             return .Never
@@ -88,6 +94,16 @@ public class NumberScrollView: TRZView {
             configureImageCache()
         }
     }
+    
+    //Requires the TRZNUMBERSCROLL_ENABLE_PRIVATE_API preprocessor symbol to be defined
+    #if os(OSX) && TRZNUMBERSCROLL_ENABLE_PRIVATE_API
+    public var fontSmoothingBackgroundColor:TRZColor? {
+        get { return numberScrollLayer.fontSmoothingBackgroundColor }
+        set {
+            numberScrollLayer.fontSmoothingBackgroundColor = newValue
+        }
+    }
+    #endif
     
     override public init(frame: CGRect) {
         super.init(frame: frame)
@@ -146,6 +162,21 @@ public class NumberScrollView: TRZView {
     return intrinsicContentSize()
     }
     #endif
+    
+    #if os(OSX)
+    public var backgroundColor:TRZColor? {
+        didSet {
+            layer?.backgroundColor = backgroundColor?.CGColor
+            numberScrollLayer.backgroundColor = backgroundColor?.CGColor
+        }
+    }
+    #elseif os(iOS) || os(tvOS)
+    public override var backgroundColor:TRZColor? {
+        didSet {
+            numberScrollLayer.backgroundColor = backgroundColor?.CGColor
+        }
+    }
+    #endif
 }
 
 public protocol AcquireRelinquishProtocol {
@@ -178,13 +209,13 @@ public class AcquireRelinquishBox<V>:AcquireRelinquishProtocol {
 }
 
 public protocol NumberScrollLayerImageCache {
-    func cachedImageBoxForKey(key: String, font:TRZFont, color:TRZColor) -> AcquireRelinquishBox<TRZImage>?
-    func setImage(image:TRZImage, key:String, font:TRZFont, color:TRZColor) -> AcquireRelinquishBox<TRZImage>
+    func cachedImageBoxForKey(key: String, font:TRZFont, color:TRZColor, backgroundColor:TRZColor?, fontSmoothingBackgroundColor:TRZColor?) -> AcquireRelinquishBox<TRZImage>?
+    func setImage(image:TRZImage, key:String, font:TRZFont, color:TRZColor, backgroundColor:TRZColor?, fontSmoothingBackgroundColor:TRZColor?) -> AcquireRelinquishBox<TRZImage>
     func evict()
 }
 
 private func ==(lhs:NumberScrollLayer.DefaultImageCache.CacheKey, rhs:NumberScrollLayer.DefaultImageCache.CacheKey) -> Bool {
-    return lhs.key == rhs.key && lhs.font == rhs.font && lhs.color == rhs.color
+    return lhs.key == rhs.key && lhs.font == rhs.font && lhs.color == rhs.color && lhs.fontSmoothingBackgroundColor == rhs.fontSmoothingBackgroundColor && lhs.backgroundColor == rhs.backgroundColor
 }
 
 public class NumberScrollLayer: CALayer {
@@ -263,8 +294,10 @@ public class NumberScrollLayer: CALayer {
             var key:String
             var font:TRZFont
             var color:TRZColor
+            var backgroundColor:TRZColor?
+            var fontSmoothingBackgroundColor:TRZColor?
             var hashValue:Int {
-                return key.hashValue ^ font.hashValue ^ color.hashValue
+                return key.hashValue ^ font.hashValue ^ color.hashValue ^ (fontSmoothingBackgroundColor?.hashValue ?? 0) ^ (backgroundColor?.hashValue ?? 0)
             }
         }
         
@@ -278,9 +311,9 @@ public class NumberScrollLayer: CALayer {
             }
         }
         
-        public func cachedImageBoxForKey(key: String, font:TRZFont, color:TRZColor) -> AcquireRelinquishBox<TRZImage>? {
+        public func cachedImageBoxForKey(key: String, font:TRZFont, color:TRZColor, backgroundColor:TRZColor?, fontSmoothingBackgroundColor:TRZColor?) -> AcquireRelinquishBox<TRZImage>? {
             var box:AcquireRelinquishBox<TRZImage>?
-            let cacheKey = CacheKey(key: key, font: font, color: color)
+            let cacheKey = CacheKey(key: key, font: font, color: color, backgroundColor: backgroundColor, fontSmoothingBackgroundColor: fontSmoothingBackgroundColor)
             dispatch_sync(queue) {
                 box = self.cachedImages[cacheKey]
             }
@@ -288,8 +321,8 @@ public class NumberScrollLayer: CALayer {
         }
         
         
-        public func setImage(image:TRZImage, key:String, font:TRZFont, color:TRZColor) -> AcquireRelinquishBox<TRZImage> {
-            let cacheKey = CacheKey(key: key, font: font, color: color)
+        public func setImage(image:TRZImage, key:String, font:TRZFont, color:TRZColor, backgroundColor:TRZColor?, fontSmoothingBackgroundColor:TRZColor?) -> AcquireRelinquishBox<TRZImage> {
+            let cacheKey = CacheKey(key: key, font: font, color: color, backgroundColor: backgroundColor, fontSmoothingBackgroundColor:fontSmoothingBackgroundColor)
             let newVal = AcquireRelinquishBox<TRZImage>(value: image)
             dispatch_sync(queue) {
                 self.cachedImages[cacheKey] = newVal
@@ -385,6 +418,7 @@ public class NumberScrollLayer: CALayer {
     
     public var animationDuration:NSTimeInterval = 1.0
     lazy public var animationCurve:CAMediaTimingFunction = CAMediaTimingFunction(controlPoints: 0, 0, 0.1, 1)
+    public var animationDirection:AnimationDirection = .Up
     
     private var _digitsImage:TRZImage?
     public var digitsImage:TRZImage! {
@@ -408,9 +442,59 @@ public class NumberScrollLayer: CALayer {
     
     private let repetitions = 2
     
+    #if os(OSX) && TRZNUMBERSCROLL_ENABLE_PRIVATE_API
+    private typealias CGContextSetFontSmoothingBackgroundColorFunc = @convention(c) (CGContext?, CGColor) -> Void
+    private static let CGContextSetFontSmoothingBackgroundColor:CGContextSetFontSmoothingBackgroundColorFunc? = {
+            let RTLD_DEFAULT = UnsafeMutablePointer<Void>(bitPattern: -2)
+            let sym = dlsym(RTLD_DEFAULT, "CGContextSetFontSmoothingBackgroundColor")
+            if sym != nil {
+                return unsafeBitCast(sym, CGContextSetFontSmoothingBackgroundColorFunc.self)
+            }
+        return nil
+    }()
+    #endif
+    
+    private func configureFontAntialiasing(backgroundColorIsOpaque:Bool) {
+        let ctx = self.currentGraphicsContext()
+        #if os(OSX)
+            if backgroundColorIsOpaque {
+                CGContextSetShouldSmoothFonts(ctx, true)
+                return
+            }
+            
+            #if TRZNUMBERSCROLL_ENABLE_PRIVATE_API
+                if let fontSmoothingBackgroundColor = self.fontSmoothingBackgroundColor {
+                    NumberScrollLayer.CGContextSetFontSmoothingBackgroundColor?(ctx, fontSmoothingBackgroundColor.CGColor)
+                    CGContextSetShouldSmoothFonts(ctx, true)
+                } else {
+                    CGContextSetShouldSmoothFonts(ctx, false)
+                }
+            #endif
+        #elseif os(iOS) || os(tvOS)
+            CGContextSetShouldSmoothFonts(ctx, false)
+        #endif
+    }
+    
     private func createImageForNonDigit(character:Character, font:TRZFont) -> TRZImage {
         let cacheKey = String(self.dynamicType) + ".characters." + String(character)
-        if let box = imageCache?.cachedImageBoxForKey(cacheKey, font: font, color: self.textColor) {
+        
+        let backgroundColor:TRZColor? = {
+            if let bkg = self.backgroundColor {
+                if CGColorGetAlpha(bkg) == 1 {
+                    return TRZColor(CGColor: bkg)
+                }
+            }
+            return nil
+        }()
+        
+        let fontSmoothingBackgroundColor:TRZColor?
+        #if os(OSX) && TRZNUMBERSCROLL_ENABLE_PRIVATE_API
+            fontSmoothingBackgroundColor = self.fontSmoothingBackgroundColor
+        #else
+            fontSmoothingBackgroundColor = nil
+        #endif
+        
+        if let box = imageCache?.cachedImageBoxForKey(cacheKey, font: font, color: self.textColor, backgroundColor: backgroundColor, fontSmoothingBackgroundColor: fontSmoothingBackgroundColor) {
             _cachedCharacterImageBoxes.append(box)
             return box.acquire()
         }
@@ -423,12 +507,12 @@ public class NumberScrollLayer: CALayer {
         imageSize.width = ceil(size.width)
         
         let drawingHandler = { (rect:CGRect) -> Bool in
-            #if os(OSX)
-                let ctx = NSGraphicsContext.currentContext()?.CGContext
-            #elseif os(iOS) || os(tvOS)
-                let ctx = UIGraphicsGetCurrentContext()
-            #endif
-            CGContextSetShouldSmoothFonts(ctx, false)
+            self.configureFontAntialiasing(backgroundColor != nil)
+            if let backgroundColor = backgroundColor {
+                let ctx = self.currentGraphicsContext()
+                CGContextSetFillColorWithColor(ctx, backgroundColor.CGColor)
+                CGContextFillRect(ctx, rect)
+            }
             str.drawInRect(CGRect(x: rect.origin.x, y: rect.origin.y + (imageSize.height - size.height) / 2, width: imageSize.width, height: size.height), withAttributes: fontAttributes)
             return true
         }
@@ -443,16 +527,41 @@ public class NumberScrollLayer: CALayer {
         #endif
         
         
-        if let box = imageCache?.setImage(image, key: cacheKey, font: font, color: self.textColor) {
+        if let box = imageCache?.setImage(image, key: cacheKey, font: font, color: self.textColor, backgroundColor: backgroundColor, fontSmoothingBackgroundColor: fontSmoothingBackgroundColor) {
             _cachedCharacterImageBoxes.append(box)
         }
         
         return image
     }
     
+    private func currentGraphicsContext() -> CGContext? {
+        #if os(OSX)
+            return NSGraphicsContext.currentContext()?.CGContext
+        #elseif os(iOS) || os(tvOS)
+            return UIGraphicsGetCurrentContext()
+        #endif
+    }
+    
     private func createDigitsImage(font:TRZFont) -> TRZImage {
         let cacheKey = String(self.dynamicType) + ".digits"
-        if let box = imageCache?.cachedImageBoxForKey(cacheKey, font: font, color: self.textColor) {
+        
+        let backgroundColor:TRZColor? = {
+            if let bkg = self.backgroundColor {
+                if CGColorGetAlpha(bkg) == 1 {
+                    return TRZColor(CGColor: bkg)
+                }
+            }
+            return nil
+        }()
+
+        let fontSmoothingBackgroundColor:TRZColor?
+        #if os(OSX) && TRZNUMBERSCROLL_ENABLE_PRIVATE_API
+            fontSmoothingBackgroundColor = self.fontSmoothingBackgroundColor
+        #else
+            fontSmoothingBackgroundColor = nil
+        #endif
+        
+        if let box = imageCache?.cachedImageBoxForKey(cacheKey, font: font, color: self.textColor, backgroundColor: backgroundColor ,fontSmoothingBackgroundColor: fontSmoothingBackgroundColor) {
             _cachedDigitsImageBox = box
             return box.acquire()
         }
@@ -472,12 +581,12 @@ public class NumberScrollLayer: CALayer {
         let imageSize = CGSize(width: maxSize.width, height: maxSize.height * CGFloat(digits.count) * CGFloat(repetitions))
         
         let drawingHandler = { (rect:CGRect) -> Bool in
-            #if os(OSX)
-                let ctx = NSGraphicsContext.currentContext()?.CGContext
-            #elseif os(iOS) || os(tvOS)
-                let ctx = UIGraphicsGetCurrentContext()
-            #endif
-            CGContextSetShouldSmoothFonts(ctx, false)
+            self.configureFontAntialiasing(backgroundColor != nil)
+            if let backgroundColor = backgroundColor {
+                let ctx = self.currentGraphicsContext()
+                CGContextSetFillColorWithColor(ctx, backgroundColor.CGColor)
+                CGContextFillRect(ctx, rect)
+            }
             let individualHeight = maxSize.height
             var currentRect = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: imageSize.width, height: individualHeight))
             for _ in 0..<repetitions {
@@ -498,7 +607,7 @@ public class NumberScrollLayer: CALayer {
             UIGraphicsEndImageContext()
         #endif
         
-        if let box = imageCache?.setImage(image, key: cacheKey, font: font, color: self.textColor) {
+        if let box = imageCache?.setImage(image, key: cacheKey, font: font, color: self.textColor, backgroundColor: backgroundColor, fontSmoothingBackgroundColor: fontSmoothingBackgroundColor) {
             _cachedDigitsImageBox = box
         }
         
@@ -708,10 +817,10 @@ public class NumberScrollLayer: CALayer {
         case Down
     }
     
-    public func playScrollAnimation(direction:AnimationDirection, completion:(()->Void)? = nil) {
+    public func playScrollAnimation(completion:(()->Void)? = nil) {
         if animationDuration == 0 { return }
         
-        let durationOffset = self.animationDuration/Double(contentLayers.count + 1)
+        let durationOffset = animationDuration/Double(contentLayers.count + 1)
         
         var offset = durationOffset * 2
         CATransaction.begin()
@@ -723,8 +832,8 @@ public class NumberScrollLayer: CALayer {
                 let animation = CABasicAnimation(keyPath: "bounds.origin.y")
                 let upOrigin = upperRectForDigit(digit).origin.y
                 let downOrigin = lowerRectForDigit(digit).origin.y
-                scrollLayer.bounds.origin.y =  (direction == .Up) ? downOrigin : upOrigin
-                animation.fromValue = (direction == .Up) ? upOrigin : downOrigin
+                scrollLayer.bounds.origin.y =  (animationDirection == .Up) ? downOrigin : upOrigin
+                animation.fromValue = (animationDirection == .Up) ? upOrigin : downOrigin
                 animation.timingFunction = self.animationCurve
                 animation.duration = offset
                 scrollLayer.addAnimation(animation, forKey: "scroll")
@@ -736,6 +845,30 @@ public class NumberScrollLayer: CALayer {
     
     public static func evictGlobalImageCache() {
         globalImageCache.evict()
+    }
+    
+    #if os(OSX) && TRZNUMBERSCROLL_ENABLE_PRIVATE_API
+    public var fontSmoothingBackgroundColor:TRZColor? {
+        didSet {
+            if fontSmoothingBackgroundColor != oldValue {
+                releaseCachedImages()
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                recolorScrollLayers()
+                CATransaction.commit()
+            }
+        }
+    }
+    #endif
+    
+    override public var backgroundColor:CGColor? {
+        didSet {
+            releaseCachedImages()
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            recolorScrollLayers()
+            CATransaction.commit()
+        }
     }
 }
 
