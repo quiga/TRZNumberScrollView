@@ -19,7 +19,7 @@ Setup
 Usage
 ---
 ```swift
-let numberView = TRZNumberScrollView()
+let numberView = NumberScrollView()
 //Add to superview, configure constraints etc.
 numberView.setText("123456", animated: true)
 ```
