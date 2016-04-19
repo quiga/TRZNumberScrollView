@@ -112,7 +112,7 @@ public class AnimationCurveEditor: NSControl {
     
     private func commonInit() {
         panGestureRecognizer.target = self
-        panGestureRecognizer.action = Selector("panGestureRecognizerDidRecognize:")
+        panGestureRecognizer.action = #selector(AnimationCurveEditor.panGestureRecognizerDidRecognize(_:))
         addGestureRecognizer(panGestureRecognizer)
     }
     

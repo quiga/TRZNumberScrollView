@@ -35,7 +35,7 @@ public class NumberScrollView: TRZView {
         }
     }
     
-    public func setText(text:String, animated:Bool,completion:(()->Void)? = nil) {
+    public func setText(text:String, animated:Bool, completion:(()->Void)? = nil) {
         self.text = text
         if animated {
             self.numberScrollLayer.playScrollAnimation(completion)
@@ -175,7 +175,7 @@ public class NumberScrollView: TRZView {
 }
 
 public protocol AcquireRelinquishProtocol {
-    typealias T
+    associatedtype T
     func acquire() -> T
     func relinquish()
     var acquireCount:Int { get }
@@ -269,10 +269,10 @@ public class NumberScrollLayer: CALayer {
             super.init()
             
             #if !os(OSX)
-                NSNotificationCenter.defaultCenter().addObserver(self, selector: "evict", name: UIApplicationDidReceiveMemoryWarningNotification, object: nil)
-                NSNotificationCenter.defaultCenter().addObserver(self, selector: "evict", name: UIApplicationDidEnterBackgroundNotification, object: nil)
+                NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(DefaultImageCache.evict), name: UIApplicationDidReceiveMemoryWarningNotification, object: nil)
+                NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(DefaultImageCache.evict), name: UIApplicationDidEnterBackgroundNotification, object: nil)
                 if #available(iOSApplicationExtension 8.2, *) {
-                    NSNotificationCenter.defaultCenter().addObserver(self, selector: "evict", name: NSExtensionHostDidEnterBackgroundNotification, object: nil)
+                    NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(DefaultImageCache.evict), name: NSExtensionHostDidEnterBackgroundNotification, object: nil)
                 }
             #endif
         }
