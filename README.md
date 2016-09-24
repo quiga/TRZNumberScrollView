@@ -21,7 +21,7 @@ Usage
 ```swift
 let numberView = NumberScrollView()
 //Add to superview, configure constraints etc.
-numberView.setText("123456", animated: true)
+numberView.set(text: "123456", animated: true)
 ```
 
 You can set any text, including non-numeric characters; however, only numeric digits will be animated.
@@ -34,7 +34,7 @@ In addition, the view's behavior can be customized via the following properties:
 - `animationCurve`
 - `animationDirection`
 
-If you intend to set both `font` and `textColor` at the same time, it is recommended that you do so either before setting `text`, or by calling the `setFont(:textColor:)` method, to avoid generating unnecessary images.
+If you intend to set both `font` and `textColor` at the same time, it is recommended that you do so either before setting `text`, or by calling the `set(font:textColor:)` method, to avoid generating unnecessary images.
 
 The included demo project for OS X lets you play with these parameters so you can tweak the behavior to your liking. 
 

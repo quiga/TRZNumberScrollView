@@ -9,14 +9,14 @@
 import Cocoa
 
 @objc protocol NumberScrollViewParametersViewControllerDelegate {
-    optional func parametersViewController(sender:NumberScrollViewParametersViewController, didChangeAnimationEnabled animationEnabled:Bool)
-    optional func parametersViewController(sender:NumberScrollViewParametersViewController, didChangeAnimationDuration animationDuration:NSTimeInterval)
-    optional func parametersViewController(sender:NumberScrollViewParametersViewController, didChangeAnimationCurve animationCurve:CAMediaTimingFunction)
-    optional func parametersViewController(sender:NumberScrollViewParametersViewController, didChangeText text:String)
-    optional func parametersViewController(sender:NumberScrollViewParametersViewController, didChangeFont font:NSFont)
-    optional func parametersViewController(sender:NumberScrollViewParametersViewController, didChangeTextColor textColor:NSColor)
-    optional func parametersViewController(sender:NumberScrollViewParametersViewController, didChangeAnimationDirection animationDirection:NumberScrollView.AnimationDirection)
-    optional func parametersViewControllerDidCommit(sender:NumberScrollViewParametersViewController)
+    @objc optional func parametersViewController(_ sender:NumberScrollViewParametersViewController, didChangeAnimationEnabled animationEnabled:Bool)
+    @objc optional func parametersViewController(_ sender:NumberScrollViewParametersViewController, didChangeAnimationDuration animationDuration:TimeInterval)
+    @objc optional func parametersViewController(_ sender:NumberScrollViewParametersViewController, didChangeAnimationCurve animationCurve:CAMediaTimingFunction)
+    @objc optional func parametersViewController(_ sender:NumberScrollViewParametersViewController, didChangeText text:String)
+    @objc optional func parametersViewController(_ sender:NumberScrollViewParametersViewController, didChangeFont font:NSFont)
+    @objc optional func parametersViewController(_ sender:NumberScrollViewParametersViewController, didChangeTextColor textColor:NSColor)
+    @objc optional func parametersViewController(_ sender:NumberScrollViewParametersViewController, didChangeAnimationDirection animationDirection:NumberScrollView.AnimationDirection)
+    @objc optional func parametersViewControllerDidCommit(_ sender:NumberScrollViewParametersViewController)
 }
 
 class NumberScrollViewParametersViewController: NSViewController, NSControlTextEditingDelegate {
@@ -46,7 +46,7 @@ class NumberScrollViewParametersViewController: NSViewController, NSControlTextE
         }
     }
     
-    private(set) dynamic var animationDuration:NSTimeInterval = 1.0 {
+    private(set) dynamic var animationDuration:TimeInterval = 1.0 {
         didSet {
             if oldValue != animationDuration {
                 delegate?.parametersViewController?(self, didChangeAnimationDuration: animationDuration)
@@ -70,7 +70,7 @@ class NumberScrollViewParametersViewController: NSViewController, NSControlTextE
         }
     }
     
-    private(set) dynamic var font:NSFont = NSFont.systemFontOfSize(48) {
+    private(set) dynamic var font:NSFont = NSFont.systemFont(ofSize: 48) {
         didSet {
             if oldValue != font {
                 delegate?.parametersViewController?(self, didChangeFont: font)
@@ -78,9 +78,9 @@ class NumberScrollViewParametersViewController: NSViewController, NSControlTextE
         }
     }
     
-    private dynamic var displayFont:NSFont = NSFont.systemFontOfSize(NSFont.systemFontSize())
+    private dynamic var displayFont:NSFont = NSFont.systemFont(ofSize: NSFont.systemFontSize())
     
-    private(set) dynamic var textColor:NSColor = NSColor.blackColor() {
+    private(set) dynamic var textColor:NSColor = NSColor.black {
         didSet {
             if oldValue != textColor {
                 delegate?.parametersViewController?(self, didChangeTextColor: textColor)
@@ -88,7 +88,7 @@ class NumberScrollViewParametersViewController: NSViewController, NSControlTextE
         }
     }
     
-    private(set) var animationDirection:NumberScrollView.AnimationDirection = .Up {
+    private(set) var animationDirection:NumberScrollView.AnimationDirection = .up {
         didSet {
             if oldValue != animationDirection {
                 delegate?.parametersViewController?(self, didChangeAnimationDirection: animationDirection)
@@ -112,17 +112,17 @@ class NumberScrollViewParametersViewController: NSViewController, NSControlTextE
         
         configureAnimationCurveEditor();
         
-        animationCurveEditor.bind("enabled", toObject: self, withKeyPath: "animationEnabled", options: nil)
+        animationCurveEditor.bind("enabled", to: self, withKeyPath: "animationEnabled", options: nil)
         let toNSValueOptions = [NSValueTransformerBindingOption: ObservablePointToNSValueTransformer()]
-        bind("startControlPoint", toObject: animationCurveEditor, withKeyPath: "startControlPointValue", options: toNSValueOptions)
-        bind("endControlPoint", toObject: animationCurveEditor, withKeyPath: "endControlPointValue", options: toNSValueOptions)
+        bind("startControlPoint", to: animationCurveEditor, withKeyPath: "startControlPointValue", options: toNSValueOptions)
+        bind("endControlPoint", to: animationCurveEditor, withKeyPath: "endControlPointValue", options: toNSValueOptions)
     }
     
-    @IBAction private func didEndEditingPointTextField(sender: NSTextField) {
+    @IBAction private func didEndEditingPointTextField(_ sender: NSTextField) {
         configureAnimationCurveEditor()
     }
     
-    @objc func control(control: NSControl, textShouldEndEditing fieldEditor: NSText) -> Bool {
+    @objc func control(_ control: NSControl, textShouldEndEditing fieldEditor: NSText) -> Bool {
         let val = control.stringValue
 
         if val.isEmpty {
@@ -132,31 +132,31 @@ class NumberScrollViewParametersViewController: NSViewController, NSControlTextE
         return true
     }
     
-    @IBAction private func didChangeDirectionRadioButton(sender: NSButton) {
-        animationDirection = (upDirectionButton.state == NSOnState) ? .Up : .Down
+    @IBAction private func didChangeDirectionRadioButton(_ sender: NSButton) {
+        animationDirection = (upDirectionButton.state == NSOnState) ? .up : .down
     }
     
-    @IBAction private func didClickSetFont(sender: NSButton) {
-        let fontManager = NSFontManager.sharedFontManager()
+    @IBAction private func didClickSetFont(_ sender: NSButton) {
+        let fontManager = NSFontManager.shared()
         fontManager.target = self
         fontManager.setSelectedFont(self.font, isMultiple: false)
         fontManager.orderFrontFontPanel(self)
     }
     
-    @objc override func changeFont(sender: AnyObject?) {
-        font = sender?.convertFont(font) ?? NSFont.systemFontOfSize(NSFont.systemFontSize())
+    @objc override func changeFont(_ sender: Any?) {
+        font = (sender as? NSFontManager)?.convert(font) ?? NSFont.systemFont(ofSize: NSFont.systemFontSize())
         displayFont = NSFont(descriptor: font.fontDescriptor, size: NSFont.systemFontSize())!
     }
     
-    @objc private func changeAttributes(sender: AnyObject?) {
-        textColor = (sender?.convertAttributes([String: AnyObject]())["NSColor"] as? NSColor) ?? NSColor.blackColor()
+    @objc private func changeAttributes(_ sender: AnyObject?) {
+        textColor = (sender?.convertAttributes([String: AnyObject]())["NSColor"] as? NSColor) ?? NSColor.black
     }
     
-    @IBAction private func didClickUpdate(sender: NSButton) {
+    @IBAction private func didClickUpdate(_ sender: NSButton) {
         commit()
     }
     
-    @IBAction private func didPressEnterOnTextField(sender: NSTextField) {
+    @IBAction private func didPressEnterOnTextField(_ sender: NSTextField) {
         commit()
     }
     
@@ -166,7 +166,7 @@ class NumberScrollViewParametersViewController: NSViewController, NSControlTextE
 }
 
 
-@objc(TRZFontNameValueTransformer) class FontNameValueTransformer: NSValueTransformer {
+@objc(TRZFontNameValueTransformer) class FontNameValueTransformer: ValueTransformer {
     override class func transformedValueClass() -> AnyClass {
         return NSString.self
     }
@@ -175,14 +175,14 @@ class NumberScrollViewParametersViewController: NSViewController, NSControlTextE
         return false
     }
     
-    override func transformedValue(value: AnyObject?) -> AnyObject? {
+    override func transformedValue(_ value: Any?) -> Any? {
         guard let font = value as? NSFont else { return nil }
         
         return String(format: "%@ %.1fpt", font.displayName ?? "(null)", font.pointSize)
     }
 }
 
-class ObservablePointToNSValueTransformer: NSValueTransformer {
+class ObservablePointToNSValueTransformer: ValueTransformer {
     override class func transformedValueClass() -> AnyClass {
         return NSValue.self
     }
@@ -191,7 +191,7 @@ class ObservablePointToNSValueTransformer: NSValueTransformer {
         return true
     }
     
-    override func transformedValue(value: AnyObject?) -> AnyObject? {
+    override func transformedValue(_ value: Any?) -> Any? {
         if let point = value as? ObservablePoint {
             return NSValue(point:CGPoint(x:point.x , y: point.y))
         } else if let point = (value as? NSValue)?.pointValue {

@@ -10,7 +10,7 @@ import Cocoa
 
 
 public class AnimationCurveEditor: NSControl {
-    public var backgroundColor:NSColor? = NSColor.whiteColor() {
+    public var backgroundColor:NSColor? = NSColor.white {
         didSet { needsDisplay = true }
     }
     
@@ -22,7 +22,7 @@ public class AnimationCurveEditor: NSControl {
         didSet { needsDisplay = true }
     }
     
-    public var gridStrokeColor = NSColor.gridColor() {
+    public var gridStrokeColor = NSColor.gridColor {
         didSet { needsDisplay = true }
     }
     
@@ -30,7 +30,7 @@ public class AnimationCurveEditor: NSControl {
         didSet { needsDisplay = true }
     }
     
-    public var curveStrokeColor:NSColor = NSColor(forControlTint: .BlueControlTint) {
+    public var curveStrokeColor:NSColor = NSColor(for: .blueControlTint) {
         didSet { needsDisplay = true }
     }
     
@@ -38,7 +38,7 @@ public class AnimationCurveEditor: NSControl {
         didSet { needsDisplay = true }
     }
     
-    public var handleStrokeColor:NSColor = NSColor.grayColor() {
+    public var handleStrokeColor:NSColor = NSColor.gray {
         didSet { needsDisplay = true }
     }
     
@@ -46,11 +46,11 @@ public class AnimationCurveEditor: NSControl {
         didSet { needsDisplay = true }
     }
 
-    dynamic public var startControlPointValue:CGPoint = CGPointMake(0, 0) {
+    dynamic public var startControlPointValue:CGPoint = CGPoint(x: 0, y: 0) {
         didSet { needsDisplay = true }
     }
     
-    public var startControlPointKnobFillColor:NSColor = NSColor.whiteColor() {
+    public var startControlPointKnobFillColor:NSColor = NSColor.white {
         didSet { needsDisplay = true }
     }
 
@@ -58,11 +58,11 @@ public class AnimationCurveEditor: NSControl {
         didSet { needsDisplay = true }
     }
 
-    public var startControlPointKnobStrokeColor:NSColor = NSColor.redColor() {
+    public var startControlPointKnobStrokeColor:NSColor = NSColor.red {
         didSet { needsDisplay = true }
     }
     
-    dynamic public var endControlPointValue:CGPoint = CGPointMake(1, 1) {
+    dynamic public var endControlPointValue:CGPoint = CGPoint(x: 1, y: 1) {
         didSet { needsDisplay = true }
     }
     
@@ -70,11 +70,11 @@ public class AnimationCurveEditor: NSControl {
         didSet { needsDisplay = true }
     }
 
-    public var endControlPointKnobFillColor:NSColor = NSColor.whiteColor() {
+    public var endControlPointKnobFillColor:NSColor = NSColor.white {
         didSet { needsDisplay = true }
     }
 
-    public var endControlPointKnobStrokeColor:NSColor = NSColor.blueColor() {
+    public var endControlPointKnobStrokeColor:NSColor = NSColor.blue {
         didSet { needsDisplay = true }
     }
     
@@ -82,12 +82,12 @@ public class AnimationCurveEditor: NSControl {
         didSet { needsDisplay = true }
     }
     
-    override public var enabled:Bool {
-        didSet { panGestureRecognizer.enabled = enabled }
+    override public var isEnabled:Bool {
+        didSet { panGestureRecognizer.isEnabled = isEnabled }
     }
     
     private var _target:AnyObject?
-    private var _action:Selector = nil
+    private var _action:Selector? = nil
     private var panGestureRecognizer = NSPanGestureRecognizer();
 
     override public var target:AnyObject? {
@@ -95,7 +95,7 @@ public class AnimationCurveEditor: NSControl {
         set { _target = newValue }
     }
     
-    override public var action:Selector {
+    override public var action:Selector? {
         get { return _action }
         set { _action = newValue }
     }
@@ -121,9 +121,9 @@ public class AnimationCurveEditor: NSControl {
     private var adjustingStartControlPoint:Bool = false
     private var adjustingEndControlPoint:Bool = false
     
-    @objc private func panGestureRecognizerDidRecognize(gestureRecognizer:NSPanGestureRecognizer) {
-        if gestureRecognizer.state == .Began {
-            let location = gestureRecognizer.locationInView(self)
+    @objc private func panGestureRecognizerDidRecognize(_ gestureRecognizer:NSPanGestureRecognizer) {
+        if gestureRecognizer.state == .began {
+            let location = gestureRecognizer.location(in: self)
             let checkStartControl:(CGFloat)->Bool = { tolerance in
                 if self.startControlPointKnobBounds.insetBy(dx: -tolerance, dy: -tolerance).contains(location) {
                     self.adjustingStartControlPoint = true
@@ -154,9 +154,9 @@ public class AnimationCurveEditor: NSControl {
                 if checkStartControl(10) { return }
             }
             
-        } else if gestureRecognizer.state == .Changed {
+        } else if gestureRecognizer.state == .changed {
             if adjustingStartControlPoint || adjustingEndControlPoint {
-                let location = gestureRecognizer.locationInView(self)
+                let location = gestureRecognizer.location(in: self)
                 let relativePoint = CGPoint(x: (location.x - squareBounds.minX)/squareBounds.width, y: (location.y - squareBounds.minY)/squareBounds.height)
                 
                 let restrictedPoint = CGPoint(x: max(min(relativePoint.x, 1), 0), y: max(min(relativePoint.y, 1), 0))
@@ -169,7 +169,7 @@ public class AnimationCurveEditor: NSControl {
                 
                 sendAction(action, to: target)
             }
-        } else if gestureRecognizer.state == .Cancelled || gestureRecognizer.state == .Ended {
+        } else if gestureRecognizer.state == .cancelled || gestureRecognizer.state == .ended {
             adjustingStartControlPoint = false
             adjustingEndControlPoint = false
         }
@@ -183,26 +183,26 @@ public class AnimationCurveEditor: NSControl {
         return rect
     }
     
-    private func controlPointsForRect(rect:CGRect) -> (CGFloat, CGFloat, CGFloat, CGFloat) {
+    private func controlPointsForRect(_ rect:CGRect) -> (CGPoint, CGPoint) {
         let cp1x = startControlPointValue.x * rect.width + rect.minX
         let cp1y = startControlPointValue.y * rect.height + rect.minY
         let cp2x = endControlPointValue.x * rect.width + rect.minX
         let cp2y = endControlPointValue.y * rect.height + rect.minY
-        return (cp1x, cp1y, cp2x, cp2y)
+        return (CGPoint(x:cp1x, y:cp1y), CGPoint(x:cp2x, y:cp2y))
     }
 
     private var startControlPointKnobBounds:CGRect {
-        let (cp1x, cp1y, _, _) = controlPointsForRect(squareBounds)
-        return CGRect(origin: CGPointMake(cp1x, cp1y), size: CGSizeZero).insetBy(dx: -controlPointKnobDiameter, dy: -controlPointKnobDiameter).integral
+        let (control1, _) = controlPointsForRect(squareBounds)
+        return CGRect(origin: control1, size: CGSize.zero).insetBy(dx: -controlPointKnobDiameter, dy: -controlPointKnobDiameter).integral
     }
     
     private var endControlPointKnobBounds:CGRect {
-        let (_, _, cp2x, cp2y) = controlPointsForRect(squareBounds)
-        return CGRect(origin: CGPointMake(cp2x, cp2y), size: CGSizeZero).insetBy(dx: -controlPointKnobDiameter, dy: -controlPointKnobDiameter).integral
+        let (_, control2) = controlPointsForRect(squareBounds)
+        return CGRect(origin: control2, size: CGSize.zero).insetBy(dx: -controlPointKnobDiameter, dy: -controlPointKnobDiameter).integral
     }
     
-    override public func drawRect(dirtyRect: NSRect) {
-        super.drawRect(dirtyRect)
+    override public func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
         
         let rect = squareBounds
         
@@ -220,78 +220,78 @@ public class AnimationCurveEditor: NSControl {
         drawHandles(rect)
     }
     
-    private func drawGrid(rect: CGRect) {
+    private func drawGrid(_ rect: CGRect) {
         guard gridDivisions > 0 else { return }
         
         let subLength = rect.width / CGFloat(gridDivisions)
-        guard let ctx = NSGraphicsContext.currentContext()?.CGContext else { return }
-        CGContextSaveGState(ctx)
-        CGContextSetStrokeColorWithColor(ctx, gridStrokeColor.CGColor)
-        CGContextSetLineWidth(ctx, gridLineWidth)
-        CGContextStrokeRect(ctx, rect.insetBy(dx: gridLineWidth / 2, dy: gridLineWidth / 2))
+        guard let ctx = NSGraphicsContext.current()?.cgContext else { return }
+        ctx.saveGState()
+        ctx.setStrokeColor(gridStrokeColor.cgColor)
+        ctx.setLineWidth(gridLineWidth)
+        ctx.stroke(rect.insetBy(dx: gridLineWidth / 2, dy: gridLineWidth / 2))
         
         for i in 1..<gridDivisions {
             let offset = CGFloat(i) * subLength
-            CGContextMoveToPoint(ctx, rect.minX + offset, rect.minY)
-            CGContextAddLineToPoint(ctx, rect.minX + offset, rect.maxY)
-            CGContextStrokePath(ctx)
+            ctx.move(to: CGPoint(x: rect.minX + offset, y: rect.minY))
+            ctx.addLine(to: CGPoint(x: rect.minX + offset, y: rect.maxY))
+            ctx.strokePath()
             
-            CGContextMoveToPoint(ctx, rect.minX, rect.minY + offset)
-            CGContextAddLineToPoint(ctx, rect.maxY + rect.height, rect.minY  + offset)
-            CGContextStrokePath(ctx)
+            ctx.move(to: CGPoint(x: rect.minX, y: rect.minY + offset))
+            ctx.addLine(to: CGPoint(x: rect.maxY + rect.height, y: rect.minY  + offset))
+            ctx.strokePath()
         }
-        CGContextRestoreGState(ctx)
+        ctx.restoreGState()
     }
     
-    private func drawCurve(rect: CGRect) {
-        guard let ctx = NSGraphicsContext.currentContext()?.CGContext else { return }
-        CGContextSaveGState(ctx)
-        CGContextSetStrokeColorWithColor(ctx, curveStrokeColor.CGColor)
-        CGContextSetLineWidth(ctx, curveLineWidth)
-        CGContextMoveToPoint(ctx, rect.minX, rect.minY)
-        let (cp1x, cp1y, cp2x, cp2y) = controlPointsForRect(rect)
-        CGContextAddCurveToPoint(ctx, cp1x, cp1y, cp2x, cp2y, rect.maxX, rect.maxY)
-        CGContextStrokePath(ctx)
-        CGContextRestoreGState(ctx)
+    private func drawCurve(_ rect: CGRect) {
+        guard let ctx = NSGraphicsContext.current()?.cgContext else { return }
+        ctx.saveGState()
+        ctx.setStrokeColor(curveStrokeColor.cgColor)
+        ctx.setLineWidth(curveLineWidth)
+        ctx.move(to: CGPoint(x: rect.minX, y: rect.minY))
+        let (control1, control2) = controlPointsForRect(rect)
+        ctx.addCurve(to: CGPoint(x: rect.maxX, y: rect.maxY), control1: control1, control2: control2)
+        ctx.strokePath()
+        ctx.restoreGState()
     }
     
-    private func drawHandles(rect:CGRect) {
-        guard let ctx = NSGraphicsContext.currentContext()?.CGContext else { return }
-        CGContextSaveGState(ctx)
+    private func drawHandles(_ rect:CGRect) {
+        guard let ctx = NSGraphicsContext.current()?.cgContext else { return }
+        ctx.saveGState()
         
-        let (cp1x, cp1y, cp2x, cp2y) = controlPointsForRect(rect)
+        let (control1, control2) = controlPointsForRect(rect)
         
         let drawStartHandle = {
-            CGContextSetStrokeColorWithColor(ctx, self.handleStrokeColor.CGColor)
-            CGContextSetLineWidth(ctx, self.handleLineWidth)
-            CGContextMoveToPoint(ctx, rect.minX, rect.minY)
-            CGContextAddLineToPoint(ctx, cp1x, cp1y)
-            CGContextStrokePath(ctx)
+            ctx.setStrokeColor(self.handleStrokeColor.cgColor)
+            ctx.setLineWidth(self.handleLineWidth)
+            ctx.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            ctx.addLine(to: control1)
+            ctx.strokePath()
             
             let startControlPointKnobBounds = self.startControlPointKnobBounds
             
-            CGContextSetFillColorWithColor(ctx, self.startControlPointKnobFillColor.CGColor)
-            CGContextFillEllipseInRect(ctx, startControlPointKnobBounds)
-            let strokeColor = self.enabled ? self.startControlPointKnobStrokeColor : NSColor.disabledControlTextColor()
-            CGContextSetStrokeColorWithColor(ctx, strokeColor.CGColor)
-            CGContextSetLineWidth(ctx, self.startControlPointKnobLineWidth)
-            CGContextStrokeEllipseInRect(ctx, startControlPointKnobBounds)
+            ctx.setFillColor(self.startControlPointKnobFillColor.cgColor)
+            ctx.fillEllipse(in: startControlPointKnobBounds)
+            let strokeColor = self.isEnabled ? self.startControlPointKnobStrokeColor : NSColor.disabledControlTextColor
+            ctx.setStrokeColor(strokeColor.cgColor)
+            ctx.setLineWidth(self.startControlPointKnobLineWidth)
+            ctx.strokeEllipse(in: startControlPointKnobBounds)
         }
         
         let drawSecondHandle = {
-            CGContextSetStrokeColorWithColor(ctx, self.handleStrokeColor.CGColor)
-            CGContextSetLineWidth(ctx, self.handleLineWidth)
-            CGContextMoveToPoint(ctx, rect.maxX, rect.maxY)
-            CGContextAddLineToPoint(ctx, cp2x, cp2y)
-            CGContextStrokePath(ctx)
+            ctx.setStrokeColor(self.handleStrokeColor.cgColor)
+            ctx.setLineWidth(self.handleLineWidth)
+            ctx.move(to: CGPoint(x: rect.maxX, y: rect.maxY))
+            ctx.addLine(to: control2)
+            ctx.strokePath()
 
             let endControlPointKnobBounds = self.endControlPointKnobBounds
-            CGContextSetFillColorWithColor(ctx, self.endControlPointKnobFillColor.CGColor)
-            CGContextFillEllipseInRect(ctx, endControlPointKnobBounds)
-            let strokeColor = self.enabled ? self.endControlPointKnobStrokeColor : NSColor.disabledControlTextColor()
-            CGContextSetStrokeColorWithColor(ctx, strokeColor.CGColor)
-            CGContextSetLineWidth(ctx, self.endControlPointKnobLineWidth)
-            CGContextStrokeEllipseInRect(ctx, endControlPointKnobBounds)
+            ctx.setFillColor(self.endControlPointKnobFillColor.cgColor)
+            ctx.fillEllipse(in: endControlPointKnobBounds)
+            let strokeColor = self.isEnabled ? self.endControlPointKnobStrokeColor : NSColor.disabledControlTextColor
+            ctx.setStrokeColor(strokeColor.cgColor)
+            ctx.setLineWidth(self.endControlPointKnobLineWidth)
+            ctx.strokeEllipse(in: endControlPointKnobBounds)
         }
 
         if startControlPointKnobIsOnTop {
@@ -302,6 +302,6 @@ public class AnimationCurveEditor: NSControl {
             drawSecondHandle()
         }
         
-        CGContextRestoreGState(ctx)
+        ctx.restoreGState()
     }
 }

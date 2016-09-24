@@ -19,33 +19,33 @@ class ViewController: NSSplitViewController, NumberScrollViewParametersViewContr
         parametersViewController = splitViewItems[1].viewController as? NumberScrollViewParametersViewController
         parametersViewController.delegate = self
         let numberScrollView = numberScrollViewContainer.numberScrollView
-        numberScrollView.text = parametersViewController.text
-        numberScrollView.animationDuration = parametersViewController.animationDuration
-        numberScrollView.animationCurve = parametersViewController.animationCurve
-        numberScrollView.setFont(parametersViewController.font, textColor: parametersViewController.textColor)
+        numberScrollView?.text = parametersViewController.text
+        numberScrollView?.animationDuration = parametersViewController.animationDuration
+        numberScrollView?.animationCurve = parametersViewController.animationCurve
+        numberScrollView?.set(font: parametersViewController.font, textColor: parametersViewController.textColor)
     }
     
-    func parametersViewControllerDidCommit(sender: NumberScrollViewParametersViewController) {
-        numberScrollViewContainer.numberScrollView.setText(parametersViewController.text, animated: parametersViewController.animationEnabled)
+    func parametersViewControllerDidCommit(_ sender: NumberScrollViewParametersViewController) {
+        numberScrollViewContainer.numberScrollView.set(text: parametersViewController.text, animated: parametersViewController.animationEnabled)
     }
     
-    func parametersViewController(sender: NumberScrollViewParametersViewController, didChangeAnimationCurve animationCurve: CAMediaTimingFunction) {
+    func parametersViewController(_ sender: NumberScrollViewParametersViewController, didChangeAnimationCurve animationCurve: CAMediaTimingFunction) {
         numberScrollViewContainer.numberScrollView.animationCurve = animationCurve
     }
 
-    func parametersViewController(sender: NumberScrollViewParametersViewController, didChangeAnimationDuration animationDuration: NSTimeInterval) {
+    func parametersViewController(_ sender: NumberScrollViewParametersViewController, didChangeAnimationDuration animationDuration: TimeInterval) {
         numberScrollViewContainer.numberScrollView.animationDuration = animationDuration
     }
     
-    func parametersViewController(sender: NumberScrollViewParametersViewController, didChangeFont font: NSFont) {
+    func parametersViewController(_ sender: NumberScrollViewParametersViewController, didChangeFont font: NSFont) {
         numberScrollViewContainer.numberScrollView.font = font
     }
         
-    func parametersViewController(sender: NumberScrollViewParametersViewController, didChangeTextColor textColor: NSColor) {
+    func parametersViewController(_ sender: NumberScrollViewParametersViewController, didChangeTextColor textColor: NSColor) {
         numberScrollViewContainer.numberScrollView.textColor = textColor
     }
     
-    func parametersViewController(sender: NumberScrollViewParametersViewController, didChangeAnimationDirection animationDirection: NumberScrollView.AnimationDirection) {
+    func parametersViewController(_ sender: NumberScrollViewParametersViewController, didChangeAnimationDirection animationDirection: NumberScrollView.AnimationDirection) {
         numberScrollViewContainer.numberScrollView.animationDirection = animationDirection
     }
 }
@@ -56,7 +56,7 @@ class NumberScrollViewContainerViewController: NSViewController {
     @IBOutlet var backgroundColorView: BackgroundColorView!
     
     override func viewDidLoad() {
-        backgroundColorView.backgroundColor = NSColor.whiteColor()
+        backgroundColorView.backgroundColor = NSColor.white
         numberScrollView.backgroundColor = backgroundColorView.backgroundColor
     }
 }
@@ -68,7 +68,7 @@ class BackgroundColorView: NSView {
         }
     }
     
-    override func drawRect(dirtyRect: NSRect) {
+    override func draw(_ dirtyRect: NSRect) {
         backgroundColor?.setFill()
         NSRectFill(bounds)
     }
