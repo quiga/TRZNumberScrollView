@@ -14,6 +14,13 @@
     public typealias TRZView = UIView
 #endif
 
+private func performWithoutImplicitAnimation(_ block: ()->Void) {
+    CATransaction.begin()
+    CATransaction.setDisableActions(true)
+    block()
+    CATransaction.commit()
+}
+
 public class NumberScrollView: TRZView {
     
     public typealias AnimationDirection = NumberScrollLayer.AnimationDirection
@@ -46,7 +53,9 @@ public class NumberScrollView: TRZView {
     
     public func set(font: TRZFont, textColor:TRZColor) {
         let oldSize = numberScrollLayer.boundingSize
-        numberScrollLayer.set(font: font, textColor: textColor)
+        performWithoutImplicitAnimation() {
+            numberScrollLayer.set(font: font, textColor: textColor)
+        }
         if (numberScrollLayer.boundingSize != oldSize) {
             invalidateIntrinsicContentSize()
         }
@@ -54,7 +63,10 @@ public class NumberScrollView: TRZView {
     
     public var textColor:TRZColor {
         get { return numberScrollLayer.textColor }
-        set { numberScrollLayer.textColor = newValue }
+        set { performWithoutImplicitAnimation() {
+            numberScrollLayer.textColor = newValue
+            }
+        }
     }
     
     public var font:TRZFont {
@@ -443,10 +455,10 @@ public class NumberScrollLayer: CALayer {
     #if os(OSX) && TRZNUMBERSCROLL_ENABLE_PRIVATE_API
     private typealias CGContextSetFontSmoothingBackgroundColorFunc = @convention(c) (CGContext?, CGColor) -> Void
     private static let CGContextSetFontSmoothingBackgroundColor:CGContextSetFontSmoothingBackgroundColorFunc? = {
-        let RTLD_DEFAULT = UnsafeMutablePointer<Void>(bitPattern: -2)
+        let RTLD_DEFAULT = UnsafeMutableRawPointer(bitPattern: -2)
         let sym = dlsym(RTLD_DEFAULT, "CGContextSetFontSmoothingBackgroundColor")
         if sym != nil {
-            return unsafeBitCast(sym, CGContextSetFontSmoothingBackgroundColorFunc.self)
+            return unsafeBitCast(sym, to: CGContextSetFontSmoothingBackgroundColorFunc.self)
         }
         return nil
     }()
@@ -462,10 +474,10 @@ public class NumberScrollLayer: CALayer {
             
             #if TRZNUMBERSCROLL_ENABLE_PRIVATE_API
                 if let fontSmoothingBackgroundColor = self.fontSmoothingBackgroundColor {
-                    NumberScrollLayer.CGContextSetFontSmoothingBackgroundColor?(ctx, fontSmoothingBackgroundColor.CGColor)
-                    CGContextSetShouldSmoothFonts(ctx, true)
+                    NumberScrollLayer.CGContextSetFontSmoothingBackgroundColor?(ctx, fontSmoothingBackgroundColor.cgColor)
+                    ctx?.setShouldSmoothFonts(true)
                 } else {
-                    CGContextSetShouldSmoothFonts(ctx, false)
+                    ctx?.setShouldSmoothFonts(false)
                 }
             #endif
         #elseif os(iOS) || os(tvOS)
@@ -854,8 +866,8 @@ public class NumberScrollLayer: CALayer {
     
     #if os(OSX) && TRZNUMBERSCROLL_ENABLE_PRIVATE_API
     public var fontSmoothingBackgroundColor:TRZColor? {
-    didSet {
-        if fontSmoothingBackgroundColor != oldValue {
+        didSet {
+            if fontSmoothingBackgroundColor != oldValue {
                 releaseCachedImages()
                 recolorScrollLayers()
             }
@@ -870,13 +882,6 @@ public class NumberScrollLayer: CALayer {
                 recolorScrollLayers()
             }
         }
-    }
-    
-    private func performWithoutImplicitAnimation(_ block: ()->Void) {
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        block()
-        CATransaction.commit()
     }
 }
 
