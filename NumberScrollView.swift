@@ -42,7 +42,7 @@ public class NumberScrollView: TRZView {
         }
     }
     
-    public func set(text:String, animated:Bool, completion:(()->Void)? = nil) {
+    public func setText(_ text:String, animated:Bool, completion:(()->Void)? = nil) {
         self.text = text
         if animated {
             self.numberScrollLayer.playScrollAnimation(completion)
@@ -51,10 +51,10 @@ public class NumberScrollView: TRZView {
         }
     }
     
-    public func set(font: TRZFont, textColor:TRZColor) {
+    public func setFont(_ font: TRZFont, textColor:TRZColor) {
         let oldSize = numberScrollLayer.boundingSize
         performWithoutImplicitAnimation() {
-            numberScrollLayer.set(font: font, textColor: textColor)
+            numberScrollLayer.setFont(font, textColor: textColor)
         }
         if (numberScrollLayer.boundingSize != oldSize) {
             invalidateIntrinsicContentSize()
@@ -159,7 +159,7 @@ public class NumberScrollView: TRZView {
     }
     #elseif os(iOS) || os(tvOS)
     override public func sizeThatFits(_ size: CGSize) -> CGSize {
-    return intrinsicContentSize
+        return intrinsicContentSize
     }
     #endif
     
@@ -190,7 +190,7 @@ public protocol AcquireRelinquishProtocol {
     var acquireCount:Int { get }
 }
 
-public class AcquireRelinquishBox<V>:AcquireRelinquishProtocol {
+public class AcquireRelinquishBox<V>: AcquireRelinquishProtocol {
     public typealias T = V
     private lazy var queue:DispatchQueue = {
         let queueQos = DispatchQoS(qosClass: .utility, relativePriority: 0)
@@ -221,8 +221,8 @@ public class AcquireRelinquishBox<V>:AcquireRelinquishProtocol {
 }
 
 public protocol NumberScrollLayerImageCache {
-    func getImageBox(forKey: String, font:TRZFont, color:TRZColor, backgroundColor:TRZColor?, fontSmoothingBackgroundColor:TRZColor?) -> AcquireRelinquishBox<TRZImage>?
-    func set(image:TRZImage, key:String, font:TRZFont, color:TRZColor, backgroundColor:TRZColor?, fontSmoothingBackgroundColor:TRZColor?) -> AcquireRelinquishBox<TRZImage>
+    func imageBox(forKey key: String, font:TRZFont, color:TRZColor, backgroundColor:TRZColor?, fontSmoothingBackgroundColor:TRZColor?) -> AcquireRelinquishBox<TRZImage>?
+    func setImage(_ image:TRZImage, forKey key:String, font:TRZFont, color:TRZColor, backgroundColor:TRZColor?, fontSmoothingBackgroundColor:TRZColor?) -> AcquireRelinquishBox<TRZImage>
     func evict()
 }
 
@@ -241,7 +241,7 @@ public class NumberScrollLayer: CALayer {
         super.init(layer: layer)
         if let layer = layer as? NumberScrollLayer {
             self.imageCache = layer.imageCache
-            self.set(font: layer.font, textColor: layer.textColor)
+            self.setFont(layer.font, textColor: layer.textColor)
             self.animationCurve = layer.animationCurve
             self.animationDuration = layer.animationDuration
             self.text = layer.text
@@ -254,7 +254,7 @@ public class NumberScrollLayer: CALayer {
         let selfName = String(describing: NumberScrollLayer.self)
         let font = aDecoder.decodeObject(forKey: selfName + ".font") as! TRZFont
         let textColor = aDecoder.decodeObject(forKey: selfName + ".textColor") as! TRZColor
-        self.set(font: font, textColor: textColor)
+        self.setFont(font, textColor: textColor)
         
         self.text = aDecoder.decodeObject(forKey: selfName + ".text") as! String
         self.animationCurve = aDecoder.decodeObject(forKey: selfName + ".animationCurve")! as! CAMediaTimingFunction
@@ -322,7 +322,7 @@ public class NumberScrollLayer: CALayer {
             }
         }
         
-        public func getImageBox(forKey key: String, font:TRZFont, color:TRZColor, backgroundColor:TRZColor?, fontSmoothingBackgroundColor:TRZColor?) -> AcquireRelinquishBox<TRZImage>? {
+        public func imageBox(forKey key: String, font:TRZFont, color:TRZColor, backgroundColor:TRZColor?, fontSmoothingBackgroundColor:TRZColor?) -> AcquireRelinquishBox<TRZImage>? {
             var box:AcquireRelinquishBox<TRZImage>?
             let cacheKey = CacheKey(key: key, font: font, color: color, backgroundColor: backgroundColor, fontSmoothingBackgroundColor: fontSmoothingBackgroundColor)
             queue.sync {
@@ -332,7 +332,7 @@ public class NumberScrollLayer: CALayer {
         }
         
         
-        public func set(image:TRZImage, key:String, font:TRZFont, color:TRZColor, backgroundColor:TRZColor?, fontSmoothingBackgroundColor:TRZColor?) -> AcquireRelinquishBox<TRZImage> {
+        public func setImage(_ image:TRZImage, forKey key:String, font:TRZFont, color:TRZColor, backgroundColor:TRZColor?, fontSmoothingBackgroundColor:TRZColor?) -> AcquireRelinquishBox<TRZImage> {
             let cacheKey = CacheKey(key: key, font: font, color: color, backgroundColor: backgroundColor, fontSmoothingBackgroundColor:fontSmoothingBackgroundColor)
             let newVal = AcquireRelinquishBox<TRZImage>(value: image)
             queue.sync {
@@ -351,7 +351,7 @@ public class NumberScrollLayer: CALayer {
         }
     }
     
-    public func set(font:TRZFont, textColor:TRZColor) {
+    public func setFont(_ font:TRZFont, textColor:TRZColor) {
         _textColor = textColor
         self.font = font
     }
@@ -504,7 +504,7 @@ public class NumberScrollLayer: CALayer {
             fontSmoothingBackgroundColor = nil
         #endif
         
-        if let box = imageCache?.getImageBox(forKey: cacheKey, font: font, color: self.textColor, backgroundColor: backgroundColor, fontSmoothingBackgroundColor: fontSmoothingBackgroundColor) {
+        if let box = imageCache?.imageBox(forKey: cacheKey, font: font, color: self.textColor, backgroundColor: backgroundColor, fontSmoothingBackgroundColor: fontSmoothingBackgroundColor) {
             _cachedCharacterImageBoxes.append(box)
             return box.acquire()
         }
@@ -541,7 +541,7 @@ public class NumberScrollLayer: CALayer {
         #endif
         
         
-        if let box = imageCache?.set(image: image, key: cacheKey, font: font, color: self.textColor, backgroundColor: backgroundColor, fontSmoothingBackgroundColor: fontSmoothingBackgroundColor) {
+        if let box = imageCache?.setImage(image, forKey: cacheKey, font: font, color: self.textColor, backgroundColor: backgroundColor, fontSmoothingBackgroundColor: fontSmoothingBackgroundColor) {
             _cachedCharacterImageBoxes.append(box)
         }
         
@@ -575,7 +575,7 @@ public class NumberScrollLayer: CALayer {
             fontSmoothingBackgroundColor = nil
         #endif
         
-        if let box = imageCache?.getImageBox(forKey: cacheKey, font: font, color: self.textColor, backgroundColor: backgroundColor ,fontSmoothingBackgroundColor: fontSmoothingBackgroundColor) {
+        if let box = imageCache?.imageBox(forKey: cacheKey, font: font, color: self.textColor, backgroundColor: backgroundColor ,fontSmoothingBackgroundColor: fontSmoothingBackgroundColor) {
             _cachedDigitsImageBox = box
             return box.acquire()
         }
@@ -625,7 +625,7 @@ public class NumberScrollLayer: CALayer {
             UIGraphicsEndImageContext()
         #endif
         
-        if let box = imageCache?.set(image: image, key: cacheKey, font: font, color: self.textColor, backgroundColor: backgroundColor, fontSmoothingBackgroundColor: fontSmoothingBackgroundColor) {
+        if let box = imageCache?.setImage(image, forKey: cacheKey, font: font, color: self.textColor, backgroundColor: backgroundColor, fontSmoothingBackgroundColor: fontSmoothingBackgroundColor) {
             _cachedDigitsImageBox = box
         }
         

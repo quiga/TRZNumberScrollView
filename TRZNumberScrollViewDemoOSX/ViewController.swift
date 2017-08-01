@@ -22,11 +22,11 @@ class ViewController: NSSplitViewController, NumberScrollViewParametersViewContr
         numberScrollView?.text = parametersViewController.text
         numberScrollView?.animationDuration = parametersViewController.animationDuration
         numberScrollView?.animationCurve = parametersViewController.animationCurve
-        numberScrollView?.set(font: parametersViewController.font, textColor: parametersViewController.textColor)
+        numberScrollView?.setFont(parametersViewController.font, textColor: parametersViewController.textColor)
     }
     
     func parametersViewControllerDidCommit(_ sender: NumberScrollViewParametersViewController) {
-        numberScrollViewContainer.numberScrollView.set(text: parametersViewController.text, animated: parametersViewController.animationEnabled)
+        numberScrollViewContainer.numberScrollView.setText(parametersViewController.text, animated: parametersViewController.animationEnabled)
     }
     
     func parametersViewController(_ sender: NumberScrollViewParametersViewController, didChangeAnimationCurve animationCurve: CAMediaTimingFunction) {
