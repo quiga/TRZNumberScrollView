@@ -20,7 +20,7 @@ Usage
 ```swift
 let numberView = NumberScrollView()
 //Add to superview, configure constraints etc.
-numberView.setText(123456", animated: true)
+numberView.setText("123456", animated: true)
 ```
 
 You can set any text, including non-numeric characters; however, only numeric digits will be animated.
