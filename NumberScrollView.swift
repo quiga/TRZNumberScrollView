@@ -43,6 +43,12 @@ public class NumberScrollView: TRZView {
     }
     
     public func setText(_ text:String, animated:Bool, completion:(()->Void)? = nil) {
+        
+        if self.text.compare(text) == .orderedSame {
+            completion?()
+            return
+        }
+        
         self.text = text
         if animated {
             self.numberScrollLayer.playScrollAnimation(completion)
