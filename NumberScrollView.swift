@@ -14,6 +14,8 @@
     public typealias TRZView = UIView
 #endif
 
+public typealias AnimationDirectionBlock = (_ oldValue: String, _ newValue: String) -> NumberScrollView.AnimationDirection
+
 private func performWithoutImplicitAnimation(_ block: ()->Void) {
     CATransaction.begin()
     CATransaction.setDisableActions(true)
@@ -99,6 +101,11 @@ public class NumberScrollView: TRZView {
     public var animationDirection:AnimationDirection {
         get { return numberScrollLayer.animationDirection }
         set { numberScrollLayer.animationDirection = newValue }
+    }
+    
+    public var animationDirectionBlock:AnimationDirectionBlock? {
+        get { return numberScrollLayer.animationDirectionBlock }
+        set { numberScrollLayer.animationDirectionBlock = newValue }
     }
     
     public var imageCachePolicy:ImageCachePolicy = {
@@ -362,7 +369,14 @@ public class NumberScrollLayer: CALayer {
         self.font = font
     }
     
+    private var prevoiusText: String = ""
+    
     public var text:String = "" {
+        willSet(newText) {
+            if text != newText {
+                prevoiusText = text
+            }
+        }
         didSet {
             if text != oldValue {
                 performWithoutImplicitAnimation() {
@@ -431,6 +445,7 @@ public class NumberScrollLayer: CALayer {
     public var animationDuration:TimeInterval = 1.0
     lazy public var animationCurve:CAMediaTimingFunction = CAMediaTimingFunction(controlPoints: 0, 0, 0.1, 1)
     public var animationDirection:AnimationDirection = .up
+    public var animationDirectionBlock:AnimationDirectionBlock? = nil
     
     private var _digitsImage:TRZImage?
     public var digitsImage:TRZImage! {
@@ -585,7 +600,7 @@ public class NumberScrollLayer: CALayer {
             fontSmoothingBackgroundColor = nil
         #endif
         
-        if let box = imageCache?.imageBox(forKey: cacheKey, font: font, color: self.textColor, backgroundColor: backgroundColor ,fontSmoothingBackgroundColor: fontSmoothingBackgroundColor) {
+        if let box = imageCache?.imageBox(forKey: cacheKey, font: font, color: self.textColor, backgroundColor: backgroundColor, fontSmoothingBackgroundColor: fontSmoothingBackgroundColor) {
             _cachedDigitsImageBox = box
             return box.acquire()
         }
@@ -843,12 +858,14 @@ public class NumberScrollLayer: CALayer {
     @objc public enum AnimationDirection: Int {
         case up
         case down
+        case auto
     }
     
     public func playScrollAnimation(_ completion:(()->Void)? = nil) {
         if animationDuration == 0 { return }
         
         let durationOffset = animationDuration/Double(contentLayers.count + 1)
+        let animationDirection = (animationDirection == .auto && animationDirectionBlock != nil) ? animationDirectionBlock?(prevoiusText, text) : animationDirection
         
         var offset = durationOffset * 2
         performWithoutImplicitAnimation() {
